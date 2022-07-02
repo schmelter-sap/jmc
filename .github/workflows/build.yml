@@ -1,0 +1,276 @@
+name: Build
+
+on:
+  schedule:
+    - cron: '10 20 * * *'
+
+  workflow_dispatch:
+    inputs:
+        publish:
+          description: 'Publish on GitHub'
+          required: true
+          type: boolean
+          default: true
+        release:
+          description: 'Release Build (removes -SNAPSHOT from version)'
+          required: true
+          type: boolean
+          default: false
+        forceBuild:
+          description: 'Force build (even if already published). EA releases will be updated/overwritten.'
+          required: true
+          type: boolean
+          default: false
+        skipTests:
+          description: 'Skip testing'
+          required: true
+          type: boolean
+          default: false
+        gitRef:
+          description: 'Git ref (branch/tag/commit). If not set, the head of the branch selected above is used.'
+          required: false
+
+jobs:
+  parameters:
+    name: Initialize Parameters and Versions
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ github.event.inputs.publish || true }}
+      release: ${{ github.event.inputs.release || false }}
+      skipTests: ${{ github.event.inputs.skipTests || false }}
+      githubRelease: ${{ steps.versions.outputs.githubRelease }}
+      jmcVersion: ${{ steps.versions.outputs.jmcVersion }}
+      agentVersion: ${{ steps.versions.outputs.agentVersion }}
+      doBuild: ${{ steps.buildcheck.outputs.doBuild }}
+      commit: ${{ steps.buildcheck.outputs.commit }}
+    steps:
+      - name: Checkout JMC
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.gitRef }}
+
+      - name: Determine JMC version
+        id: versions
+        run: |
+          JMC_REV=$(grep -i \<revision\> pom.xml | sed 's/^[ \t]*<revision>//g;s/<\/revision>[ \t]*$//g')
+          if [[ '${{ github.event.inputs.release || false }}' == true ]]; then
+              JMC_VERSION=${JMC_REV}
+          else
+              JMC_VERSION=${JMC_REV}-SNAPSHOT
+          fi
+          echo JMC version: $JMC_VERSION
+          echo "::set-output name=jmcVersion::$(echo $JMC_VERSION)"
+
+          RELEASE_TAG=${JMC_VERSION}-sap
+          echo GitHub Release Tag: $RELEASE_TAG
+          echo "::set-output name=githubRelease::$(echo $RELEASE_TAG)"
+
+          AGENT_REV=$(cd agent && grep -i \<revision\> pom.xml | sed 's/^[ \t]*<revision>//g;s/<\/revision>[ \t]*$//g')
+          if [[ '${{ github.event.inputs.release || false }}' == true ]]; then
+              AGENT_VERSION=${AGENT_REV}
+          else
+              AGENT_VERSION=${AGENT_REV}-SNAPSHOT
+          fi
+          echo Agent version: $AGENT_VERSION
+          echo "::set-output name=agentVersion::$(echo $AGENT_VERSION)"
+
+      - name: Download existing release file
+        uses: robinraju/release-downloader@v1.4
+        continue-on-error: true
+        with:
+          tag: ${{ steps.versions.outputs.githubRelease }}
+          fileName: buildRef-${{ steps.versions.outputs.jmcVersion }}.txt
+
+      - name: Determine whether build is needed
+        id: buildcheck
+        run: |
+          function check_run() {
+            FORCE_BUILD='${{ github.event.inputs.forceBuild || false }}'
+
+            if [[ $FORCE_BUILD == true ]]; then
+              echo 'true'
+              exit 0
+            fi
+
+            if [[ $MY_REV != $REL_REV ]]; then
+              echo 'true'
+            else
+              echo 'false'
+            fi
+          }
+
+          MY_REV=$(git rev-parse HEAD)
+          echo My Rev: $MY_REV
+          REL_REV=$(cat buildRef-${{ steps.versions.outputs.jmcVersion }}.txt) || true
+          echo Released Rev: $REL_REV
+          echo Should run: $(check_run)
+          echo "::set-output name=doBuild::$(check_run)"
+          echo "::set-output name=commit::$(echo $MY_REV)"
+
+  build:
+    name: Build JMC
+    needs: parameters
+    if: needs.parameters.outputs.doBuild == 'true'
+    runs-on: ubuntu-latest
+    env:
+      MAVEN_OPTS: -Xmx2048m
+      MAVEN_CALL: mvn --no-transfer-progress
+    steps:
+      - name: Summarize parameters
+        run: |
+          echo publish: ${{ needs.parameters.outputs.publish }}
+          echo release: ${{ needs.parameters.outputs.release }}
+          echo skipTests: ${{ needs.parameters.outputs.skipTests }}
+          echo githubRelease: ${{ needs.parameters.outputs.githubRelease }}
+          echo jmcVersion: ${{ needs.parameters.outputs.jmcVersion }}
+          echo agentVersion: ${{ needs.parameters.outputs.agentVersion }}
+          echo commit: ${{ needs.parameters.outputs.commit }}
+
+      - name: Checkout JMC
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ needs.parameters.outputs.commit }}
+
+      - name: Set up build JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '11.0.14'
+          java-package: jdk
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven
+
+      - name: Set up GA build
+        if: needs.parameters.outputs.release == 'true'
+        run: |
+          find . ! -path "*/.git/**" -type f -name "pom.xml" -exec sed -i s/"${{ needs.versions.outputs.jmcVersion }}-SNAPSHOT"/"${{ needs.versions.outputs.jmcVersion }}"/ {} \;
+          find . ! -path "*/.git/**" -type f \( -name "feature.xml" -o -name "MANIFEST.MF" \) -exec sed -i s/"${{ needs.versions.outputs.jmcVersion }}.qualifier"/"${{ needs.versions.outputs.jmcVersion }}"/ {} \;
+          echo "MAVEN_OPTS=$MAVEN_OPTS -Dchangelist=" >> $GITHUB_ENV
+
+      - name: Write build information
+        run: |
+          echo '${{ needs.parameters.outputs.commit }}' > buildRef.txt
+
+      - name: Build & test core libraries
+        run: |
+          $MAVEN_CALL install
+        working-directory: core
+
+      - name: Build & test agent
+        # we build the agent only in snapshots
+        if: needs.parameters.outputs.release != 'true'
+        run: |
+          $MAVEN_CALL install
+        working-directory: agent
+
+      - name: Build JMC
+        run: |
+          $MAVEN_CALL p2:site
+          $MAVEN_CALL jetty:run &
+          cd ../../
+          $MAVEN_CALL package
+        working-directory: releng/third-party
+
+      - name: Run unit tests
+        if: needs.parameters.outputs.skipTests != 'true'
+        run: |
+          $MAVEN_CALL verify
+
+      - name: Run UI tests
+        if: needs.parameters.outputs.skipTests != 'true'
+        # Ignore UI failures for now
+        continue-on-error: true
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: ${{ env.MAVEN_CALL }} verify -P uitests
+
+      - name: Delete old GitHub release ${{ needs.parameters.outputs.githubRelease }}
+        if: ${{ needs.parameters.outputs.publish == 'true' && needs.parameters.outputs.release != 'true' }}
+        continue-on-error: true
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: ${{ needs.parameters.outputs.githubRelease }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Create/Update GitHub release ${{ needs.parameters.outputs.githubRelease }}
+        if: needs.parameters.outputs.publish == 'true'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ needs.parameters.outputs.githubRelease }}
+          commit: ${{ needs.parameters.outputs.commit }}
+          allowUpdates: ${{ needs.parameters.outputs.release != 'true' }}
+          prerelease: ${{ needs.parameters.outputs.release != 'true' }}
+
+      - name: Upload buildRef-${{ needs.parameters.outputs.jmcVersion }}.txt
+        if: needs.parameters.outputs.publish == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.parameters.outputs.githubRelease }}
+          file: buildRef.txt
+          asset_name: buildRef-${{ needs.parameters.outputs.jmcVersion }}.txt
+          overwrite: ${{ needs.parameters.outputs.release != 'true' }}
+
+      - name: Upload sap.jmc-${{ needs.parameters.outputs.jmcVersion }}-linux.gtk.x86_64.tar.gz
+        if: needs.parameters.outputs.publish == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.parameters.outputs.githubRelease }}
+          file: target/products/org.openjdk.jmc-linux.gtk.x86_64.tar.gz
+          asset_name: sap.jmc-${{ needs.parameters.outputs.jmcVersion }}-linux.gtk.x86_64.tar.gz
+          overwrite: ${{ needs.parameters.outputs.release != 'true' }}
+
+      - name: Upload sap.jmc-${{ needs.parameters.outputs.jmcVersion }}-macosx.cocoa.aarch64.tar.gz
+        if: needs.parameters.outputs.publish == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          tag: ${{ needs.parameters.outputs.githubRelease }}
+          file: target/products/org.openjdk.jmc-macosx.cocoa.aarch64.tar.gz
+          asset_name: sap.jmc-${{ needs.parameters.outputs.jmcVersion }}-macosx.cocoa.aarch64.tar.gz
+          overwrite: ${{ needs.parameters.outputs.release != 'true' }}
+
+      - name: Upload sap.jmc-${{ needs.parameters.outputs.jmcVersion }}-macosx.cocoa.x86_64.tar.gz
+        if: needs.parameters.outputs.publish == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          tag: ${{ needs.parameters.outputs.githubRelease }}
+          file: target/products/org.openjdk.jmc-macosx.cocoa.x86_64.tar.gz
+          asset_name: sap.jmc-${{ needs.parameters.outputs.jmcVersion }}-macosx.cocoa.x86_64.tar.gz
+          overwrite: ${{ needs.parameters.outputs.release != 'true' }}
+
+      - name: Upload sap.jmc-${{ needs.parameters.outputs.jmcVersion }}-win32.win32.x86_64.zip
+        if: needs.parameters.outputs.publish == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          tag: ${{ needs.parameters.outputs.githubRelease }}
+          file: target/products/org.openjdk.jmc-win32.win32.x86_64.zip
+          asset_name: sap.jmc-${{ needs.parameters.outputs.jmcVersion }}-win32.win32.x86_64.zip
+          overwrite: ${{ needs.parameters.outputs.release != 'true' }}
+
+      - name: Upload sap.jmc.updatesite.ide-${{ needs.parameters.outputs.jmcVersion }}.zip
+        if: needs.parameters.outputs.publish == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          tag: ${{ needs.parameters.outputs.githubRelease }}
+          file: application/org.openjdk.jmc.updatesite.ide/target/org.openjdk.jmc.updatesite.ide-${{ needs.parameters.outputs.jmcVersion }}.zip
+          asset_name: sap.jmc.updatesite.ide-${{ needs.parameters.outputs.jmcVersion }}.zip
+          overwrite: ${{ needs.parameters.outputs.release != 'true' }}
+
+      - name: Upload agent-${{ needs.parameters.outputs.agentVersion }}.jar
+        # we only build the agent in snapshots
+        if: ${{ needs.parameters.outputs.publish == 'true' && needs.parameters.outputs.release != 'true' }}
+        uses: svenstaro/upload-release-action@v2
+        with:
+          tag: ${{ needs.parameters.outputs.githubRelease }}
+          file: agent/target/agent-${{ needs.parameters.outputs.agentVersion }}.jar
+          asset_name: agent-${{ needs.parameters.outputs.agentVersion }}.jar
+          overwrite: ${{ needs.parameters.outputs.release != 'true' }}
