@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2018, 2022, Oracle and/or its affiliates. All rights reserved.
- * 
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Datadog, Inc. All rights reserved.
+ *
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * The contents of this file are subject to the terms of either the Universal Permissive License
@@ -10,17 +11,17 @@
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted
  * provided that the following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions
  * and the following disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of
  * conditions and the following disclaimer in the documentation and/or other materials provided with
  * the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to
  * endorse or promote products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
  * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
@@ -30,63 +31,28 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
  * WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.openjdk.jmc.ui.common.security;
+package org.openjdk.jmc.flightrecorder.dependencyview;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
-/**
- * {@link ICredentials} stored in the {@link ISecurityManager}. The username and password are lazy
- * loaded on demand.
- */
-public class PersistentCredentials implements ICredentials {
+public class Messages {
+	private static final String BUNDLE_NAME = "org.openjdk.jmc.flightrecorder.dependencyview.messages"; //$NON-NLS-1$
 
-	private final String id;
-	private String[] wrapped;
+	private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
 
-	private static final Pattern PASSWORD_PATTERN = Pattern
-			.compile("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#(&)[{-}]:;',?/*~$^+=<>]).{8,20}$"); //$NON-NLS-1$
+	public static final String DEPENDENCYVIEW_PACKAGE_DEPTH = "DEPENDENCYVIEW_PACKAGE_DEPTH"; //$NON-NLS-1$
+	public static final String DEPENDENCYVIEW_EDGE_BUNDLING_DIAGRAM = "DEPENDENCYVIEW_EDGE_BUNDLING_DIAGRAM"; //$NON-NLS-1$
+	public static final String DEPENDENCYVIEW_CHORD_DIAGRAM = "DEPENDENCYVIEW_CHORD_DIAGRAM"; //$NON-NLS-1$
 
-	public PersistentCredentials(String id) {
-		this.id = id;
+	private Messages() {
 	}
 
-	public PersistentCredentials(String username, String password) throws SecurityException {
-		this(username, password, null);
-	}
-
-	public PersistentCredentials(String username, String password, String family) throws SecurityException {
-		wrapped = new String[] {username, password};
-		id = SecurityManagerFactory.getSecurityManager().storeInFamily(family, wrapped);
-	}
-
-	@Override
-	public String getUsername() throws SecurityException {
-		return getCredentials()[0];
-	}
-
-	@Override
-	public String getPassword() throws SecurityException {
-		return getCredentials()[1];
-	}
-
-	private String[] getCredentials() throws SecurityException {
-		if (wrapped == null) {
-			wrapped = (String[]) SecurityManagerFactory.getSecurityManager().get(id);
+	public static String getString(String key) {
+		try {
+			return RESOURCE_BUNDLE.getString(key);
+		} catch (MissingResourceException e) {
+			return '!' + key + '!';
 		}
-		if (wrapped == null || wrapped.length != 2) {
-			throw new CredentialsNotAvailableException();
-		}
-		return wrapped;
-	}
-
-	@Override
-	public String getExportedId() {
-		return id;
-	}
-
-	public static boolean isPasswordValid(final String password) {
-		Matcher matcher = PASSWORD_PATTERN.matcher(password);
-		return matcher.matches();
 	}
 }
