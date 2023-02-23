@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jfragent>
+	<config>
+		<allowtostring>true</allowtostring>
+	</config>
+	<events>
+		<event id="demo.jfr.hashCode">
+			<label>Object.toString() calls</label>
+			<description>Tracking calls to Object.toString()</description>
+			<path>demo/toString</path>
+			<stacktrace>true</stacktrace>
+			<class>java.lang.StringBuilder</class>
+			<method>
+				<name>toString</name>
+				<descriptor>()Ljava/lang/String;</descriptor>
+				<returnvalue>
+					<description>The return value</description>
+					<contenttype>None</contenttype>
+				</returnvalue>
+			</method>
+			<fields>
+				<field>
+					<name>'count'</name>
+					<description>Capturing instance field with simple field name
+					</description>
+					<expression>count</expression>
+				</field>
+			</fields>
+			<location>WRAP</location>
+		</event>
+	</events>
+</jfragent>
