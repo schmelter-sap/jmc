@@ -50,7 +50,7 @@ jobs:
       commit: ${{ steps.buildcheck.outputs.commit }}
     steps:
       - name: Checkout JMC
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.gitRef }}
 
@@ -84,7 +84,7 @@ jobs:
           echo "agentVersion=$(echo $AGENT_VERSION)" >> $GITHUB_OUTPUT
 
       - name: Download existing release file
-        uses: robinraju/release-downloader@v1
+        uses: robinraju/release-downloader@v1.9
         continue-on-error: true
         with:
           tag: ${{ steps.versions.outputs.githubRelease }}
@@ -133,35 +133,30 @@ jobs:
           echo doBuild: ${{ needs.parameters.outputs.doBuild }}
           echo commit: ${{ needs.parameters.outputs.commit }}
 
-  deleteold:
-    name: Delete old Release
-    needs: parameters
-    if: ${{ needs.parameters.outputs.doBuild == 'true' && needs.parameters.outputs.publish == 'true' && needs.parameters.outputs.release != 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete old GitHub release ${{ needs.parameters.outputs.githubRelease }}
-        continue-on-error: true
-        uses: dev-drprasad/delete-tag-and-release@v1.0
-        with:
-          tag_name: ${{ needs.parameters.outputs.githubRelease }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
   build:
     name: Build JMC
-    needs: [parameters, deleteold]
+    needs: [parameters]
     if: needs.parameters.outputs.doBuild == 'true'
     runs-on: ubuntu-latest
     env:
       MAVEN_OPTS: -Xmx2048m
       MAVEN_CALL: mvn --batch-mode --no-transfer-progress
     steps:
+      - name: Delete old GitHub release ${{ needs.parameters.outputs.githubRelease }}
+        if: ${{ needs.parameters.outputs.publish == 'true' && needs.parameters.outputs.release != 'true' }}
+        continue-on-error: true
+        uses: dev-drprasad/delete-tag-and-release@v1.0
+        with:
+          tag_name: ${{ needs.parameters.outputs.githubRelease }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Checkout JMC
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ needs.parameters.outputs.commit }}
 
       - name: Set up build JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
@@ -169,7 +164,7 @@ jobs:
           mvn-toolchain-id: 'JavaSE-17'
 
       - name: Cache local Maven repository
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
