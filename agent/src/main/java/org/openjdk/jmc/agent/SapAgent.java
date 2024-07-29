@@ -151,7 +151,8 @@ public class SapAgent {
 		TransformRegistry registry = configuration != null ? DefaultTransformRegistry.from(configuration)
 				: DefaultTransformRegistry.empty();
 		instrumentation.addTransformer(new SapTransformer(registry), true);
-		AgentManagementFactory.createAndRegisterAgentControllerMBean(instrumentation, registry);
+		AgentManagementFactory.createAndRegisterAgentControllerMBean(instrumentation,
+				new SapTransformRegistry(registry));
 
 		List<Class<?>> classesToRetransform = new ArrayList<>();
 		Set<String> clazzes = registry.getClassNames().stream().map((name) -> name.replace('/', '.'))

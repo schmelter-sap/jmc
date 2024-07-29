@@ -13,27 +13,23 @@ import org.openjdk.jmc.agent.util.TypeUtils;
 public class SapTransformer implements ClassFileTransformer {
 
 	private final Transformer impl;
-	private final TransformRegistry registry;
 	private final Module jfrModule;
+	private TransformRegistry registry;
 
 	public SapTransformer(TransformRegistry registry) {
 		this.registry = registry;
-
 		jfrModule = ModuleLayer.boot().findModule("jdk.jfr").get();
-		impl = new Transformer(registry);
+		impl = new Transformer(new SapTransformRegistry(registry));
 	}
 
-	@Override
-	public byte[] transform(
-		ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
-		byte[] classfileBuffer) throws IllegalClassFormatException {
-		Module module = classBeingRedefined.getModule();
-
+	private void grantJfrAccessToModule(
+		Module module, ClassLoader loader, String className, ProtectionDomain protectionDomain)
+			throws IllegalClassFormatException {
 		// We need to access the jfr module.
 		if (!module.canRead(jfrModule)) {
 			// Create a class in the module which grants the access. 
 			ClassWriter cw = new ClassWriter(0);
-			String name = classBeingRedefined.getName() + "_MakeJFRModuleReadable";
+			String name = className.replace('/', '.') + "_$MakeJFRModuleReadable";
 			cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER, name.replace('.', '/'), null,
 					"java/lang/Object", null);
 
@@ -70,7 +66,21 @@ public class SapTransformer implements ClassFileTransformer {
 				t.printStackTrace();
 			}
 		}
+	}
 
+	@Override
+	public byte[] transform(
+		ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
+		byte[] classfileBuffer) throws IllegalClassFormatException {
+		if (registry.getTransformData(className).isEmpty()) {
+			return null;
+		}
+
+		if (classBeingRedefined != null) {
+			grantJfrAccessToModule(classBeingRedefined.getModule(), loader, className, protectionDomain);
+		}
+
+		System.out.println("Transform for " + className + (classBeingRedefined != null ? ".class" : ""));
 		return impl.transform(loader, className, classBeingRedefined, protectionDomain, classfileBuffer);
 	}
 
@@ -78,7 +88,14 @@ public class SapTransformer implements ClassFileTransformer {
 	public byte[] transform(
 		Module module, ClassLoader loader, String className, Class<?> classBeingRedefined,
 		ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-		return ClassFileTransformer.super.transform(module, loader, className, classBeingRedefined, protectionDomain,
-				classfileBuffer);
+		if (registry.getTransformData(className).isEmpty()) {
+			return null;
+		}
+
+		grantJfrAccessToModule(module, loader, className, protectionDomain);
+
+		System.out.println(
+				"Transform for " + className + (classBeingRedefined != null ? ".class" : "") + " [" + module + "]");
+		return impl.transform(loader, className, classBeingRedefined, protectionDomain, classfileBuffer);
 	}
 }
