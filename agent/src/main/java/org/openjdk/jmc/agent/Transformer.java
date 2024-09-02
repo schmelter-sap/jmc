@@ -95,7 +95,7 @@ public class Transformer implements ClassFileTransformer {
 			return classfileBuffer;
 		}
 		try {
-			ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+			ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 			ClassVisitor visitor = VersionUtils.getAvailableJFRVersion() == JFRVersion.JFRNEXT
 					? new JFRClassVisitor(classWriter, td, definingClassLoader, classBeingRedefined, protectionDomain)
 					: new JFRLegacyClassVisitor(classWriter, td, definingClassLoader, classBeingRedefined,

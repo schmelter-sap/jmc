@@ -66,6 +66,7 @@ public class JFRMethodAdvisor extends AdviceAdapter {
 	private final Type returnTypeRef;
 	private final Type eventType;
 	private int eventLocal = -1;
+	private int enabledLocal = -1;
 
 	private Label tryBegin = new Label();
 	private Label tryEnd = new Label();
@@ -135,10 +136,19 @@ public class JFRMethodAdvisor extends AdviceAdapter {
 	 * field attributes and call begin().
 	 */
 	private void createEvent() throws IllegalSyntaxException, MalformedConverterException {
+		Label endifLabel = new Label();
+		enabledLocal = newLocal(Type.BOOLEAN_TYPE);
+		eventLocal = newLocal(eventType);
+
 		mv.visitTypeInsn(NEW, transformDescriptor.getEventClassName());
 		mv.visitInsn(DUP);
-		mv.visitInsn(DUP);
 		mv.visitMethodInsn(INVOKESPECIAL, transformDescriptor.getEventClassName(), "<init>", "()V", false); //$NON-NLS-1$ //$NON-NLS-2$
+		mv.visitInsn(DUP);
+		mv.visitMethodInsn(INVOKEVIRTUAL, transformDescriptor.getEventClassName(), "isEnabled", "()Z", false); //$NON-NLS-1$ //$NON-NLS-2$
+		mv.visitInsn(DUP);
+		mv.visitVarInsn(ISTORE, enabledLocal);
+		mv.visitJumpInsn(IFEQ, endifLabel);
+		mv.visitInsn(DUP);
 
 		// write attribute for each parameter
 		for (Parameter param : transformDescriptor.getParameters()) {
@@ -187,7 +197,7 @@ public class JFRMethodAdvisor extends AdviceAdapter {
 		}
 
 		mv.visitMethodInsn(INVOKEVIRTUAL, transformDescriptor.getEventClassName(), "begin", "()V", false); //$NON-NLS-1$ //$NON-NLS-2$
-		eventLocal = newLocal(eventType);
+		mv.visitLabel(endifLabel);
 		mv.visitVarInsn(ASTORE, eventLocal);
 	}
 
@@ -325,7 +335,11 @@ public class JFRMethodAdvisor extends AdviceAdapter {
 	}
 
 	private void commitEvent() {
+		Label ifLabel = new Label();
+		mv.visitVarInsn(ILOAD, enabledLocal);
+		mv.visitJumpInsn(IFEQ, ifLabel);
 		mv.visitVarInsn(ALOAD, eventLocal);
 		mv.visitMethodInsn(INVOKEVIRTUAL, transformDescriptor.getEventClassName(), "commit", "()V", false); //$NON-NLS-1$ //$NON-NLS-2$
+		mv.visitLabel(ifLabel);
 	}
 }
