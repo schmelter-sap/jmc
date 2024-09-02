@@ -59,7 +59,9 @@ public class SapTransformer implements ClassFileTransformer {
 			byte[] bytes = cw.toByteArray();
 
 			try {
-				TypeUtils.defineClass(name, bytes, 0, bytes.length, loader, protectionDomain).newInstance();
+				Class<?> cls = TypeUtils.defineClass(name, bytes, 0, bytes.length, loader, protectionDomain);
+				// Running the constructor make runs the code grants jfr module access.
+				cls.getDeclaredConstructor().newInstance();
 			} catch (IllegalAccessException | InstantiationException e) {
 				e.printStackTrace();
 			} catch (Throwable t) {
