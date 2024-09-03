@@ -210,6 +210,8 @@
 							<excludes>
 								<exclude>module-info.class</exclude>
 								<exclude>META-INF/MANIFEST.MF</exclude>
+								<exclude>org/openjdk/jmc/agent/converters/sap/*</exclude>
+								<exclude>org/openjdk/jmc/agent/util/sap/*</exclude>
 							</excludes>
 						</filter>
 					</filters>
@@ -234,6 +236,26 @@
 						<goals>
 							<goal>shade</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.4.2</version>
+				<executions>
+					<execution>
+						<id>boot-jar</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<classifier>boot</classifier>
+							<includes>
+								<include>org/openjdk/jmc/agent/converters/sap/*</include>
+								<include>org/openjdk/jmc/agent/util/sap/*</include>
+							</includes>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
