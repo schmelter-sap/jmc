@@ -1,0 +1,57 @@
+<jfragent>
+    <config>
+        <classprefix>__JFREvent</classprefix>
+        <allowtostring>false</allowtostring>
+        <allowconverter>true</allowconverter>
+    </config>
+    <events>
+        <event id="jdk.log.sysPropsChanged">
+            <label>unsafeMemAlloc</label>
+            <description>Memory trace of Unsafe allocations</description>
+            <class>jdk.internal.misc.Unsafe</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <path>jdk/log/Unsafe/memoryTrace</path>
+            <method>
+                <name>allocateMemory</name>
+                <descriptor>(J)J</descriptor>
+                <parameters>
+                    <parameter index="0">
+                        <name>size</name>
+                        <description>The allocated size</description>
+                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeAllocateMemorySizeConverter</converter>
+                    </parameter>
+                </parameters>
+                <returnvalue>
+                    <name>adresss</name>
+                    <description>the allocated address</description>
+                    <converter>org.openjdk.jmc.agent.converters.sap.UnsafeAllocateMemoryResultConverter</converter>
+                </returnvalue>
+            </method>
+        </event>
+        <event id="jdk.log.test">
+            <label>test</label>
+            <description>Memory trace of Unsafe allocations</description>
+            <class>test.TestAgent</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <path>jdk/log/Unsafe/lll</path>
+            <method>
+                <name>doIt</name>
+                <descriptor>(J)J</descriptor>
+                <parameters>
+                    <parameter index="0">
+                        <name>size</name>
+                        <description>The allocated size</description>
+                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeAllocateMemorySizeConverter</converter>
+                    </parameter>
+                </parameters>
+                <returnvalue>
+                    <name>adresss</name>
+                    <description>the allocated address</description>
+                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeAllocateMemoryResultConverter</converter>
+                </returnvalue>
+            </method>
+        </event>
+    </events>
+</jfragent>
