@@ -62,11 +62,21 @@ public class SystemPropChangeLogger {
 		return false;
 	}
 
-	public static void logKey(String key) {
-		usedKey.set(key);
+	public static boolean logKey(Object key) {
+		if (key instanceof String) {
+			usedKey.set((String) key);
+
+			return true;
+		}
+
+		return false;
 	}
 
-	public static void logValue(String value) {
-		usedValue.set(value);
+	public static boolean logValue(Object value) {
+		if ((value instanceof String) || (value == null)) {
+			usedValue.set((String) value);
+		}
+
+		return true;
 	}
 }

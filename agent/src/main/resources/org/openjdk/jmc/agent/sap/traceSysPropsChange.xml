@@ -19,12 +19,12 @@
                     <parameter index="0">
                         <name>key</name>
                         <description>The key</description>
-                        <converter>org.openjdk.jmc.agent.converters.sap.SystemPropChangeLoggerKeyConverter</converter>
+                        <converter>org.openjdk.jmc.agent.converters.sap.SystemPropChangeLogger.logKey(Ljava/lang/String;)Z</converter>
                     </parameter>
                     <parameter index="1">
                         <name>value</name>
                         <description>The changed value</description>
-                        <converter>org.openjdk.jmc.agent.converters.sap.SystemPropChangeLoggerValueConverter</converter>
+                        <converter>org.openjdk.jmc.agent.converters.sap.SystemPropChangeLogger.logValue(Ljava/lang/String;)Z</converter>
                     </parameter>
                 </parameters>
             </method>
@@ -33,7 +33,7 @@
                     <name>properties</name>
                     <expression>this</expression>
                     <description>The properties object</description>
-                    <converter>org.openjdk.jmc.agent.converters.sap.SystemPropChangeLoggerPropsConverter</converter>
+                    <converter>org.openjdk.jmc.agent.converters.sap.SystemPropChangeLogger.logProperties(Ljava/util/Properties;)Z</converter>
                 </field>
             </fields>
         </event>
