@@ -42,6 +42,7 @@ public class SystemPropChangeLogger {
 
 	public static boolean logProperties(Properties props) {
 		String key = usedKey.get();
+		assert key == null;
 		String val = usedValue.get();
 
 		usedKey.remove();
@@ -63,6 +64,8 @@ public class SystemPropChangeLogger {
 	}
 
 	public static boolean logKey(Object key) {
+		assert usedKey.get() == null;
+
 		if (key instanceof String) {
 			usedKey.set((String) key);
 
@@ -73,6 +76,8 @@ public class SystemPropChangeLogger {
 	}
 
 	public static boolean logValue(Object value) {
+		assert usedValue.get() == null;
+
 		if ((value instanceof String) || (value == null)) {
 			usedValue.set((String) value);
 		}

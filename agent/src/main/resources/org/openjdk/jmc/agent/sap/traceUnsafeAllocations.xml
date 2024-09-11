@@ -5,7 +5,7 @@
         <allowconverter>true</allowconverter>
     </config>
     <events>
-        <event id="jdk.log.sysPropsChanged">
+        <event id="jdk.log.unsafeMemoryAlloc">
             <label>unsafeMemAlloc</label>
             <description>Memory trace of Unsafe allocations</description>
             <class>jdk.internal.misc.Unsafe</class>
@@ -19,38 +19,62 @@
                     <parameter index="0">
                         <name>size</name>
                         <description>The allocated size</description>
-                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeAllocateMemorySizeConverter</converter>
+                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeMemoryAllocationConverter.logSize(J)J</converter>
                     </parameter>
                 </parameters>
                 <returnvalue>
                     <name>adresss</name>
                     <description>the allocated address</description>
-                    <converter>org.openjdk.jmc.agent.converters.sap.UnsafeAllocateMemoryResultConverter</converter>
+                    <converter>org.openjdk.jmc.agent.converters.sap.UnsafeMemoryAllocationConverter.logResult(J)J</converter>
                 </returnvalue>
             </method>
         </event>
-        <event id="jdk.log.test">
-            <label>test</label>
-            <description>Memory trace of Unsafe allocations</description>
-            <class>test.TestAgent</class>
+        <event id="jdk.log.unsafeMemoryRealloc">
+            <label>unsafeMemRealloc</label>
+            <description>Memory trace of Unsafe reallocations</description>
+            <class>jdk.internal.misc.Unsafe</class>
             <stacktrace>true</stacktrace>
             <rethrow>false</rethrow>
-            <path>jdk/log/Unsafe/lll</path>
+            <path>jdk/log/Unsafe/memoryTrace</path>
             <method>
-                <name>doIt</name>
-                <descriptor>(J)J</descriptor>
+                <name>reallocateMemory</name>
+                <descriptor>(JJ)J</descriptor>
                 <parameters>
                     <parameter index="0">
                         <name>size</name>
-                        <description>The allocated size</description>
-                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeAllocateMemorySizeConverter</converter>
+                        <description>The old memory address</description>
+                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeMemoryAllocationConverter.logPtr(J)J</converter>
+                    </parameter>
+                    <parameter index="1">
+                        <name>size</name>
+                        <description>The new allocated size</description>
+                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeMemoryAllocationConverter.logSize(J)J</converter>
                     </parameter>
                 </parameters>
                 <returnvalue>
                     <name>adresss</name>
                     <description>the allocated address</description>
-                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeAllocateMemoryResultConverter</converter>
+                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeMemoryAllocationConverter.logResult(J)J</converter>
                 </returnvalue>
+            </method>
+        </event>
+        <event id="jdk.log.unsafeMemoryFree">
+            <label>unsafeMemFree</label>
+            <description>Memory trace of Unsafe frees</description>
+            <class>jdk.internal.misc.Unsafe</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <path>jdk/log/Unsafe/memoryTrace</path>
+            <method>
+                <name>freeMemory</name>
+                <descriptor>(J)V</descriptor>
+                <parameters>
+                    <parameter index="0">
+                        <name>size</name>
+                        <description>The freed memory address</description>
+                        <converter>org.openjdk.jmc.agent.converters.sap.UnsafeMemoryAllocationConverter.logFree(J)J</converter>
+                    </parameter>
+                </parameters>
             </method>
         </event>
     </events>

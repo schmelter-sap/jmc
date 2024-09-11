@@ -63,7 +63,7 @@ public class JdkLogging {
 	public static void log(String msg) {
 		logStream.println(msg);
 
-		StackTraceElement[] frames = new Exception().fillInStackTrace().getStackTrace();
+		StackTraceElement[] frames = new Exception().getStackTrace();
 
 		for (int i = 3; i < frames.length; ++i) {
 			logStream.println("\t" + frames[i]);
