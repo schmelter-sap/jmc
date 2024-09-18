@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.openjdk.jmc.agent.util.sap.AutomaticDumps;
 import org.openjdk.jmc.agent.util.sap.Command;
 import org.openjdk.jmc.agent.util.sap.CommandArguments;
 
@@ -17,44 +18,33 @@ public class UnsafeMemoryAllocationConverter {
 	private static final HashMap<Long, AllocationSite> activeAllocations = new HashMap<>();
 	private static final String MAX_FRAMES = "maxFrames";
 	private static final String MIN_SIZE = "minSize";
+	private static final String MIN_PERCENTAGE = "minPercentage";
 	private static final String MIN_AGE = "minAge";
 	private static final String MAX_AGE = "maxAge";
 	private static final String MUST_CONTAIN = "mustContain";
 	private static final String MUST_NOT_CONTAIN = "mustNotContain";
-	private static final String DUMP_COUNT = "dumpCount";
-	private static final String DUMP_INTERVAL = "dumpInterval";
-	private static final String DUMP_DELAY = "dumpDelay";
 	private static final Command dumpCommand;
 	private static final Command enableCommand;
+	private static long lastDumpSize = 0;
 
 	static {
 		// spotless:off
 		dumpCommand = new Command(
 				"dumnpUnsafeAllocations", "Dump the currently active jdk.internal.misc.Unsafe allocatios.",
 				MAX_FRAMES,	"The maximum number of frame to use for stack traces.",
+				MIN_SIZE, "The minimum size of the live allocations to dump the result",
+				MIN_PERCENTAGE, "The minimum percentage compared to the last dump",
 				MIN_AGE, "The minimum age in minutes to include an allocation in the output.",
-				MAX_AGE, "The maximum age in minutes to include an allocation in the output.",
+				MAX_AGE, "The maximum age in minutes to include an allocation in the output.",				
 				MUST_CONTAIN, "A regexp which must match at least one frame to be printed.",
 				MUST_NOT_CONTAIN, "A regexp which must not match any frame to be printed.");
 		enableCommand = new Command(dumpCommand,
-				"traceUnsafeAllocations", "Traces native memory allocation with jdk.internal.misc.Unsafe",
-				DUMP_COUNT, "The maximum number of dumps to perform",
-				DUMP_INTERVAL, "The interval between successive dumnps",
-				DUMP_DELAY, "The delay until the first dump is triggered");
+				"traceUnsafeAllocations", "Traces native memory allocation with jdk.internal.misc.Unsafe");
 		// spotless:on
 
-		new Thread(new Runnable() {
-			public void run() {
-				try {
-					while (true) {
-						Thread.sleep(10000);
-						printActiveAllocations(System.out);
-					}
-				} catch (InterruptedException e) {
-					// Ignore.
-				}
-			}
-		}).start();
+		AutomaticDumps.addOptions(enableCommand);
+		AutomaticDumps.registerDump(new CommandArguments(enableCommand),
+				(CommandArguments args) -> printActiveAllocations(System.out, args));
 	}
 
 	public static long logSize(long size) {
@@ -142,16 +132,25 @@ public class UnsafeMemoryAllocationConverter {
 		return ptr;
 	}
 
-	public static void printActiveAllocations(PrintStream ps) {
-		printActiveAllocations(ps, new CommandArguments(enableCommand));
+	public static boolean printActiveAllocations(PrintStream ps) {
+		return printActiveAllocations(ps, new CommandArguments(enableCommand));
 	}
 
-	public static void printActiveAllocations(PrintStream ps, CommandArguments args) {
+	public static boolean printActiveAllocations(PrintStream ps, CommandArguments args) {
 		DumpFilter filter = new DumpFilter(args);
 
 		synchronized (activeAllocations) {
+			if (totalSize < filter.minSize) {
+				return false;
+			}
+
+			if (totalSize < lastDumpSize * filter.minPercentageIncrease) {
+				return false;
+			}
+
 			long printedSize = 0;
 			long printedCount = 0;
+			boolean dumped = false;
 
 			for (Map.Entry<Long, AllocationSite> entry : activeAllocations.entrySet()) {
 				if (entry.getValue().printOn(entry.getKey(), ps, filter)) {
@@ -160,8 +159,14 @@ public class UnsafeMemoryAllocationConverter {
 				}
 			}
 
-			ps.println("Printed " + printedCount + " of " + activeAllocations.size() + " allocation with " + printedSize
-					+ " bytes (of " + totalSize + " bytes allocated in total).");
+			if (printedCount > 0) {
+				ps.println("Printed " + printedCount + " of " + activeAllocations.size() + " allocation with "
+						+ printedSize + " bytes (of " + totalSize + " bytes allocated in total).");
+				lastDumpSize = totalSize;
+				dumped = true;
+			}
+
+			return dumped;
 		}
 	}
 
@@ -234,6 +239,7 @@ public class UnsafeMemoryAllocationConverter {
 	public static class DumpFilter {
 		public final int maxFrames;
 		public final long minSize;
+		public final double minPercentageIncrease;
 		public final long minAge;
 		public final long maxAge;
 		public final Pattern mustContain;
@@ -242,6 +248,7 @@ public class UnsafeMemoryAllocationConverter {
 		public DumpFilter(CommandArguments args) {
 			this.maxFrames = args.getInt(MAX_FRAMES, 16);
 			this.minSize = args.getSize(MIN_SIZE, 0);
+			this.minPercentageIncrease = 1.0 + 0.01 * args.getLong(MIN_PERCENTAGE, 0);
 			this.minAge = 1000 * args.getDurationInSeconds(MIN_AGE, 0);
 			this.maxAge = 1000 * args.getDurationInSeconds(MAX_AGE, 365 * 24 * 3600);
 			this.mustContain = args.getPattern(MUST_CONTAIN, null);

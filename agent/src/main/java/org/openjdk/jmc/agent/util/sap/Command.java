@@ -27,6 +27,10 @@ public class Command {
 		}
 	}
 
+	public void addOption(String option, String description) {
+		optionsWithHelp.put(name, description);
+	}
+
 	public String getName() {
 		return name;
 	}
