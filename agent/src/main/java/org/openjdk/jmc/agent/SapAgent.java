@@ -51,7 +51,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.openjdk.jmc.agent.impl.DefaultTransformRegistry;
 import org.openjdk.jmc.agent.jmx.AgentManagementFactory;
-import org.openjdk.jmc.agent.util.IOToolkit;
 import org.openjdk.jmc.agent.util.ModuleUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -121,13 +120,8 @@ public class SapAgent {
 	}
 
 	private static byte[] getXmlConfig(String agentArguments) throws Exception {
-		if (agentArguments.indexOf(',') == -1) {
-			try (InputStream is = getStreamForConfig(agentArguments)) {
-				return IOToolkit.readFully(is, -1, true);
-			}
-		}
-
-		String[] confs = agentArguments.split(","); //$NON-NLS-1$
+		String[] parts = agentArguments.split("(?<!\\\\),");
+		StringBuilder configProp = new StringBuilder();
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newDefaultInstance();
 
 		// We merge into a dummy which is guaranteed to contain all the stuff we expect.
@@ -141,35 +135,43 @@ public class SapAgent {
 		Node events = base.getElementsByTagName("events").item(0); //$NON-NLS-1$
 		String requestedPrefix = null;
 
-		for (int i = 0; i < confs.length; ++i) {
-			Document doc = factory.newDocumentBuilder().parse(getStreamForConfig(confs[i]));
+		for (String part : parts) {
+			if (part.equals("help")) {
+				configProp.append(part).append(',');
+			} else if (part.indexOf('=') > 0) {
+				configProp.append(part).append(',');
+			} else {
+				Document doc = factory.newDocumentBuilder().parse(getStreamForConfig(part));
+				configProp.append(part).append('=');
 
-			if (getBool(doc, "allowtostring", false)) { //$NON-NLS-1$
-				setText(base, "allowtostring", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
+				if (getBool(doc, "allowtostring", false)) { //$NON-NLS-1$
+					setText(base, "allowtostring", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
 
-			if (getBool(doc, "allowconverter", false)) { //$NON-NLS-1$
-				setText(base, "allowconverter", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
+				if (getBool(doc, "allowconverter", false)) { //$NON-NLS-1$
+					setText(base, "allowconverter", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
 
-			String prefix = getString(doc, "classprefix"); //$NON-NLS-1$
+				String prefix = getString(doc, "classprefix"); //$NON-NLS-1$
 
-			if (requestedPrefix == null) {
-				requestedPrefix = prefix;
-				setText(base, "classprefix", prefix); //$NON-NLS-1$
-			} else if ((prefix != null) && !requestedPrefix.equals(prefix)) {
-				System.out.println("Conflicting class prefixes " + prefix + " vs. " + requestedPrefix); //$NON-NLS-1$ //$NON-NLS-2$
-			}
+				if (requestedPrefix == null) {
+					requestedPrefix = prefix;
+					setText(base, "classprefix", prefix); //$NON-NLS-1$
+				} else if ((prefix != null) && !requestedPrefix.equals(prefix)) {
+					System.out.println("Conflicting class prefixes " + prefix + " vs. " + requestedPrefix); //$NON-NLS-1$ //$NON-NLS-2$
+				}
 
-			NodeList list = doc.getElementsByTagName("event"); //$NON-NLS-1$
+				NodeList list = doc.getElementsByTagName("event"); //$NON-NLS-1$
 
-			for (int j = 0; j < list.getLength(); ++j) {
-				Node toAdd = list.item(j).cloneNode(true);
-				events.getOwnerDocument().adoptNode(toAdd);
-				events.appendChild(toAdd);
+				for (int j = 0; j < list.getLength(); ++j) {
+					Node toAdd = list.item(j).cloneNode(true);
+					events.getOwnerDocument().adoptNode(toAdd);
+					events.appendChild(toAdd);
+				}
 			}
 		}
 
+		System.setProperty("com.sap.jvm.jmcagent.options", configProp.toString());
 		TransformerFactory tf = TransformerFactory.newInstance();
 		javax.xml.transform.Transformer trans = tf.newTransformer();
 		StringWriter sw = new StringWriter();

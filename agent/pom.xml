@@ -407,6 +407,7 @@
 				<version>${spotless.version}</version>
 				<configuration>
 					<java>
+						<toggleOffOn />
 						<eclipse>
 							<file>${jmc.config.path}/ide/eclipse/formatting/formatting.xml</file>
 	 						<version>4.8.0</version>
