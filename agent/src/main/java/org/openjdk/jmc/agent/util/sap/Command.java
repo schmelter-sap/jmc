@@ -15,6 +15,8 @@ public class Command {
 		for (int i = 0; i < optionsWithHelp.length; i += 2) {
 			this.optionsWithHelp.put(optionsWithHelp[i], optionsWithHelp[i + 1]);
 		}
+
+		JdkLogging.addOptions(this);
 	}
 
 	public Command(Command parentCommand, String name, String description, String ... optionsWithHelp) {

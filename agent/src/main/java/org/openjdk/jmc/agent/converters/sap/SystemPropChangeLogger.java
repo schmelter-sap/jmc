@@ -28,6 +28,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Properties;
 
+import org.openjdk.jmc.agent.util.sap.Command;
+import org.openjdk.jmc.agent.util.sap.CommandArguments;
 import org.openjdk.jmc.agent.util.sap.JdkLogging;
 
 public class SystemPropChangeLogger {
@@ -39,8 +41,11 @@ public class SystemPropChangeLogger {
 
 	private static final ThreadLocal<String> usedKey = new ThreadLocal<String>();
 	private static final ThreadLocal<String> usedValue = new ThreadLocal<String>();
+	private static final Command command = new Command("traceSysPropsChange",
+			"Traces changes to the system properties.");
 
 	public static boolean logProperties(Properties props) {
+		CommandArguments args = new CommandArguments(command);
 		String key = usedKey.get();
 		assert key == null;
 		String val = usedValue.get();
@@ -52,9 +57,10 @@ public class SystemPropChangeLogger {
 			String oldVal = props.getProperty(key);
 
 			if (val == null) {
-				JdkLogging.log("System properties '" + key + "' with value '" + oldVal + "' removed");
+				JdkLogging.logWithStack(args, "System properties '" + key + "' with value '" + oldVal + "' removed");
 			} else {
-				JdkLogging.log("System property '" + key + "' changed from '" + oldVal + "' to '" + val + "'");
+				JdkLogging.logWithStack(args,
+						"System property '" + key + "' changed from '" + oldVal + "' to '" + val + "'");
 			}
 
 			return true;

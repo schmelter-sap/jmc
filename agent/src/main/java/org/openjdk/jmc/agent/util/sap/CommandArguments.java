@@ -6,17 +6,16 @@ import java.util.HashMap;
 import java.util.regex.Pattern;
 
 public class CommandArguments {
-	private static final String optionsLine = AccessController.doPrivileged(new PrivilegedAction<String>() {
-		public String run() {
-			return System.getProperty("com.sap.jvm.jmcagent.options", "");
-		}
-	});
-
 	private final HashMap<String, String> args;
 	private final Command command;
 
 	public CommandArguments(Command command) {
 		this.command = command;
+		String optionsLine = AccessController.doPrivileged(new PrivilegedAction<String>() {
+			public String run() {
+				return System.getProperty("com.sap.jvm.jmcagent.options." + command.getName(), "");
+			}
+		});
 		this.args = getOptions(optionsLine);
 	}
 
@@ -126,30 +125,38 @@ public class CommandArguments {
 				new long[] {1, 60, 3600, 3600 * 24});
 	}
 
-	private HashMap<String, String> getOptions(String line) {
+	private static String dequote(String str) {
+		StringBuilder result = new StringBuilder();
+
+		for (int i = 0; i < str.length(); ++i) {
+			char c = str.charAt(i);
+
+			if (c == '\\') {
+				if (i + 1 < str.length()) {
+					result.append(str.charAt(i + 1));
+					i += 1;
+				} else {
+					// Trailing backslash is treated just as a backslash.
+					result.append(c);
+				}
+			} else {
+				result.append(c);
+			}
+		}
+
+		return result.toString();
+	}
+
+	private static HashMap<String, String> getOptions(String line) {
 		HashMap<String, String> result = new HashMap<>();
-		String[] commandList = line.split("(?<!\\\\):");
+		String[] keysAndValues = line.split("(?<!\\\\),");
 
-		for (int i = 0; i < commandList.length; ++i) {
-			int endPos = commandList[i].indexOf('=');
+		for (String keyAndValue : keysAndValues) {
+			if (keyAndValue.length() > 0) {
+				String[] parts = keyAndValue.split("(?<!\\\\)=", 2);
 
-			if (endPos == -1) {
-				continue;
-			}
-
-			String curr = commandList[i].substring(0, endPos);
-
-			if (!curr.equals(command.getName())) {
-				continue;
-			}
-
-			String[] keysAndValues = commandList[i].substring(endPos + 1).split("(?<!\\\\),");
-
-			for (String keyAndValue : keysAndValues) {
-				String[] keyAndValues = keyAndValue.split("(?<!\\\\)=");
-
-				if (keyAndValues[0].length() > 0) {
-					result.put(keyAndValues[0], keyAndValues.length == 1 ? null : keyAndValues[1]);
+				if (parts[0].length() > 0) {
+					result.put(dequote(parts[0]), parts.length == 1 ? null : dequote(parts[1]));
 				}
 			}
 		}

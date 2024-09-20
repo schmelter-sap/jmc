@@ -24,49 +24,64 @@
 
 package org.openjdk.jmc.agent.util.sap;
 
-import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+import java.util.HashMap;
 
 public class JdkLogging {
+	public static final String LOG_DEST = "logDest";
+	private static HashMap<String, PrintStream> outputs = new HashMap<>();
 
-	private static final String JDK_LOG_DEST = "com.sap.jdk.jdkLoggingDest";
-	private static final PrintStream logStream;
-
-	static {
-		String logDest = AccessController.doPrivileged(new PrivilegedAction<String>() {
-			public String run() {
-				return System.getProperty(JDK_LOG_DEST);
-			}
-		});
-
-		PrintStream tmpStream;
-
-		if (logDest == null || "stdout".equals(logDest)) {
-			tmpStream = System.out;
-		} else if ("stderr".equals(logDest)) {
-			tmpStream = System.err;
-		} else {
-			try {
-				tmpStream = new PrintStream(new File(logDest));
-			} catch (FileNotFoundException e) {
-				System.err.println("Could not create file '" + logDest + "' for logging, using stderr instead");
-				tmpStream = System.err;
-			}
-		}
-
-		logStream = tmpStream;
+	public static void addOptions(Command command) {
+		command.addOption(LOG_DEST, "Specified where the output shows up. Can be 'stdout', 'stderr' or a file name. "
+				+ "Prepend the filename with a '+' to append to the file intead of overwriting it.");
 	}
 
-	public static void log(String msg) {
-		logStream.println(msg);
+	public static PrintStream getStream(CommandArguments args) {
+		String dest = args.getString(LOG_DEST, "stderr");
+
+		if ("stdout".equals(dest)) {
+			return System.out;
+		}
+
+		if ("stderr".equals(dest)) {
+			return System.err;
+		}
+
+		synchronized (outputs) {
+			PrintStream result = outputs.get(dest);
+
+			if (result != null) {
+				return result;
+			}
+
+			try {
+				if (dest.startsWith("+")) {
+					// Append if the file name starts with a +.
+					result = new PrintStream(new FileOutputStream(dest.substring(1), true));
+				} else {
+					result = new PrintStream(new FileOutputStream(dest, false));
+				}
+			} catch (FileNotFoundException e) {
+				System.err.println("Could not open file '" + dest + "' for output. Using stderr instead.");
+				// Don't try this again.
+				result = System.err;
+			}
+
+			outputs.put(dest, result);
+			return result;
+		}
+	}
+
+	public static void logWithStack(CommandArguments args, String msg) {
+		PrintStream stream = getStream(args);
+		stream.println(msg);
 
 		StackTraceElement[] frames = new Exception().getStackTrace();
 
 		for (int i = 3; i < frames.length; ++i) {
-			logStream.println("\t" + frames[i]);
+			stream.println("\t" + frames[i]);
 		}
 	}
 }

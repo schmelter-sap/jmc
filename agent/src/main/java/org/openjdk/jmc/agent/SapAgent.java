@@ -134,6 +134,7 @@ public class SapAgent {
 				.parse(new ByteArrayInputStream(DUMMY.getBytes(StandardCharsets.UTF_8)));
 		Node events = base.getElementsByTagName("events").item(0); //$NON-NLS-1$
 		String requestedPrefix = null;
+		String configName = null;
 
 		for (String part : parts) {
 			if (part.equals("help")) {
@@ -142,7 +143,13 @@ public class SapAgent {
 				configProp.append(part).append(',');
 			} else {
 				Document doc = factory.newDocumentBuilder().parse(getStreamForConfig(part));
-				configProp.append(part).append('=');
+
+				if (configName != null) {
+					System.setProperty("com.sap.jvm.jmcagent.options." + configName, configProp.toString());
+				}
+
+				configName = part;
+				configProp = new StringBuilder();
 
 				if (getBool(doc, "allowtostring", false)) { //$NON-NLS-1$
 					setText(base, "allowtostring", "true"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -171,7 +178,10 @@ public class SapAgent {
 			}
 		}
 
-		System.setProperty("com.sap.jvm.jmcagent.options", configProp.toString());
+		if (configName != null) {
+			System.setProperty("com.sap.jvm.jmcagent.options." + configName, configProp.toString());
+		}
+
 		TransformerFactory tf = TransformerFactory.newInstance();
 		javax.xml.transform.Transformer trans = tf.newTransformer();
 		StringWriter sw = new StringWriter();
