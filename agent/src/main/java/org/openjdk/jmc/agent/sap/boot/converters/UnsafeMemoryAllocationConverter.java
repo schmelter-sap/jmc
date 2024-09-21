@@ -1,4 +1,4 @@
-package org.openjdk.jmc.agent.converters.sap;
+package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.io.PrintStream;
 import java.util.Date;
@@ -6,46 +6,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.openjdk.jmc.agent.util.sap.AutomaticDumps;
-import org.openjdk.jmc.agent.util.sap.Command;
-import org.openjdk.jmc.agent.util.sap.CommandArguments;
-import org.openjdk.jmc.agent.util.sap.JdkLogging;
+import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.commands.UnsafeMemoryAllocationCommand;
+import org.openjdk.jmc.agent.sap.boot.util.AutomaticDumps;
+import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
-public class UnsafeMemoryAllocationConverter {
+public class UnsafeMemoryAllocationConverter extends UnsafeMemoryAllocationCommand {
 
 	private static final ThreadLocal<Long> sizeKey = new ThreadLocal<Long>();
 	private static final ThreadLocal<Long> ptrKey = new ThreadLocal<Long>();
 	private static long totalSize = 0;
 	private static final HashMap<Long, AllocationSite> activeAllocations = new HashMap<>();
-	private static final String MAX_FRAMES = "maxFrames";
-	private static final String MIN_SIZE = "minSize";
-	private static final String MIN_INCREASE = "minIncrease";
-	private static final String MIN_PERCENTAGE = "minPercentage";
-	private static final String MIN_AGE = "minAge";
-	private static final String MAX_AGE = "maxAge";
-	private static final String MUST_CONTAIN = "mustContain";
-	private static final String MUST_NOT_CONTAIN = "mustNotContain";
-	private static final Command dumpCommand;
-	private static final Command enableCommand;
 	private static long lastDumpSize = 0;
 
 	static {
-		// spotless:off
-		dumpCommand = new Command(
-				"dumnpUnsafeAllocations", "Dump the currently active jdk.internal.misc.Unsafe allocatios.",
-				MAX_FRAMES,	"The maximum number of frame to use for stack traces.",
-				MIN_SIZE, "The minimum size of the live allocations to dump the result.",
-				MIN_SIZE, "The increase in allocated size fopr a new dump to be printed.",
-				MIN_PERCENTAGE, "The minimum percentage compared to the last dump to print a dump.",
-				MIN_AGE, "The minimum age in minutes to include an allocation in the output.",
-				MAX_AGE, "The maximum age in minutes to include an allocation in the output.",				
-				MUST_CONTAIN, "A regexp which must match at least one frame to be printed.",
-				MUST_NOT_CONTAIN, "A regexp which must not match any frame to be printed.");
-		enableCommand = new Command(dumpCommand,
-				"traceUnsafeAllocations", "Traces native memory allocation with jdk.internal.misc.Unsafe");
-		// spotless:on
-
-		AutomaticDumps.addOptions(enableCommand);
 		AutomaticDumps.registerDump(new CommandArguments(enableCommand), "Unsafe native memory allocation",
 				(CommandArguments args) -> printActiveAllocations(args));
 	}

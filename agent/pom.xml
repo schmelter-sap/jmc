@@ -210,8 +210,7 @@
 							<excludes>
 								<exclude>module-info.class</exclude>
 								<exclude>META-INF/MANIFEST.MF</exclude>
-								<exclude>org/openjdk/jmc/agent/converters/sap/*</exclude>
-								<exclude>org/openjdk/jmc/agent/util/sap/*</exclude>
+								<exclude>org/openjdk/jmc/agent/sap/boot/**</exclude>
 							</excludes>
 						</filter>
 					</filters>
@@ -252,8 +251,7 @@
 						<configuration>
 							<classifier>boot</classifier>
 							<includes>
-								<include>org/openjdk/jmc/agent/converters/sap/*</include>
-								<include>org/openjdk/jmc/agent/util/sap/*</include>
+								<include>org/openjdk/jmc/agent/sap/boot/**</include>
 							</includes>
 						</configuration>
 					</execution>

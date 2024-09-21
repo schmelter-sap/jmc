@@ -1,4 +1,4 @@
-package org.openjdk.jmc.agent.util.sap;
+package org.openjdk.jmc.agent.sap.boot.commands;
 
 import java.util.HashMap;
 
@@ -15,8 +15,6 @@ public class Command {
 		for (int i = 0; i < optionsWithHelp.length; i += 2) {
 			this.optionsWithHelp.put(optionsWithHelp[i], optionsWithHelp[i + 1]);
 		}
-
-		JdkLogging.addOptions(this);
 	}
 
 	public Command(Command parentCommand, String name, String description, String ... optionsWithHelp) {
@@ -30,7 +28,7 @@ public class Command {
 	}
 
 	public void addOption(String option, String description) {
-		optionsWithHelp.put(name, description);
+		optionsWithHelp.put(option, description);
 	}
 
 	public String getName() {

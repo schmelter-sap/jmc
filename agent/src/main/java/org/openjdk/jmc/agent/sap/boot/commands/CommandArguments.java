@@ -1,4 +1,4 @@
-package org.openjdk.jmc.agent.util.sap;
+package org.openjdk.jmc.agent.sap.boot.commands;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -24,64 +24,79 @@ public class CommandArguments {
 		this.args = getOptions(line);
 	}
 
-	public String getString(String argumentName, String defaultResult) {
-		if (args.containsKey(argumentName)) {
-			return args.get(argumentName);
+	public Command getCommand() {
+		return command;
+	}
+
+	public boolean hasHelpOption() {
+		return args.containsKey("help");
+	}
+
+	public String getString(String option, String defaultResult) {
+		if (args.containsKey(option)) {
+			return args.get(option);
 		}
 
 		return defaultResult;
 	}
 
-	public boolean getBoolean(String argumentName, boolean defaultResult) {
-		if (args.containsKey(argumentName)) {
-			return Boolean.parseBoolean(args.get(argumentName));
+	public boolean getBoolean(String option, boolean defaultResult) {
+		if (args.containsKey(option)) {
+			return Boolean.parseBoolean(args.get(option));
 		}
 
 		return defaultResult;
 	}
 
-	public Pattern getPattern(String argumentName, Pattern defaultResult) {
-		if (args.containsKey(argumentName)) {
-			return Pattern.compile(args.get(argumentName));
+	public Pattern getPattern(String option, Pattern defaultResult) {
+		if (args.containsKey(option)) {
+			return Pattern.compile(args.get(option));
 		}
 
 		return defaultResult;
 	}
 
-	public int getInt(String argumentName, int defaultRersult) {
-		if (args.containsKey(argumentName)) {
+	public int getInt(String option, int defaultRersult) {
+		if (args.containsKey(option)) {
 			try {
-				return Integer.parseInt(args.get(argumentName));
+				return Integer.parseInt(args.get(option));
 			} catch (NumberFormatException e) {
-				throw new RuntimeException(
-						"Could not parse value for argument " + argumentName + " of command " + command.getName(),
-						null);
+				reportOptionError(option, "Could not parse integer value");
+				System.exit(1);
 			}
 		}
 
 		return defaultRersult;
 	}
 
-	public long getLong(String argumentName, long defaultRersult) {
-		if (args.containsKey(argumentName)) {
+	public String getUnknownArgument() {
+		for (String key : args.keySet()) {
+			if (!command.hasOption(key)) {
+				return key;
+			}
+		}
+
+		return null;
+	}
+
+	public long getLong(String option, long defaultRersult) {
+		if (args.containsKey(option)) {
 			try {
-				return Long.parseLong(args.get(argumentName));
+				return Long.parseLong(args.get(option));
 			} catch (NumberFormatException e) {
-				throw new RuntimeException(
-						"Could not parse value for argument " + argumentName + " of command " + command.getName(),
-						null);
+				reportOptionError(option, "Could not parse integer value");
 			}
 		}
 
 		return defaultRersult;
 	}
 
-	private long parseUnits(String argumentName, long defaultRersult, char[] suffixes, long[] scale) {
-		if (!args.containsKey(argumentName)) {
+	private long parseUnits(String option, long defaultRersult, char[] suffixes, long[] scale) {
+		if (!args.containsKey(option)) {
 			return defaultRersult;
 		}
 
-		String rest = args.get(argumentName);
+		String rest = args.get(option);
 		long result = 0;
 
 		while (!rest.isEmpty()) {
@@ -120,7 +135,7 @@ public class CommandArguments {
 			}
 
 			if (!found) {
-				throw new RuntimeException("Unknown unit '" + rest.charAt(0) + "' in '" + args.get(argumentName) + "'");
+				reportOptionError(option, "Unknown unit '" + rest.charAt(0) + "'.");
 			}
 
 			rest = rest.substring(1);
@@ -129,14 +144,13 @@ public class CommandArguments {
 		return result;
 	}
 
-	public long getSize(String argumentName, long defaultRersult) {
-		return parseUnits(argumentName, defaultRersult, new char[] {'k', 'M', 'G'},
+	public long getSize(String option, long defaultRersult) {
+		return parseUnits(option, defaultRersult, new char[] {'k', 'M', 'G'},
 				new long[] {1024, 1024 * 1024, 1024 * 1024 * 1024});
 	}
 
-	public long getDurationInSeconds(String argumentName, long defaultRersult) {
-		return parseUnits(argumentName, defaultRersult, new char[] {'s', 'm', 'h', 'd'},
-				new long[] {1, 60, 3600, 3600 * 24});
+	public long getDurationInSeconds(String option, long defaultRersult) {
+		return parseUnits(option, defaultRersult, new char[] {'s', 'm', 'h', 'd'}, new long[] {1, 60, 3600, 3600 * 24});
 	}
 
 	private static String dequote(String str) {
@@ -176,5 +190,12 @@ public class CommandArguments {
 		}
 
 		return result;
+	}
+
+	private void reportOptionError(String option, String msg) {
+		System.err.println("Error in option " + option + "=" + getString(option, "<empty>") + " for command '"
+				+ command.getName() + "'");
+		System.err.println(msg);
+		System.exit(1);
 	}
 }

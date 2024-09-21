@@ -22,12 +22,15 @@
  *
  */
 
-package org.openjdk.jmc.agent.util.sap;
+package org.openjdk.jmc.agent.sap.boot.util;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
+
+import org.openjdk.jmc.agent.sap.boot.commands.Command;
+import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
 
 public class JdkLogging {
 	public static final String LOG_DEST = "logDest";

@@ -1,6 +1,9 @@
-package org.openjdk.jmc.agent.util.sap;
+package org.openjdk.jmc.agent.sap.boot.util;
 
 import java.util.function.Predicate;
+
+import org.openjdk.jmc.agent.sap.boot.commands.Command;
+import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
 
 public class AutomaticDumps {
 	public static final String DUMP_COUNT = "dumpCount";
@@ -56,5 +59,7 @@ public class AutomaticDumps {
 		command.addOption(DUMP_COUNT, "The maximum number of dumps to perform");
 		command.addOption(DUMP_INTERVAL, "The interval between successive dumnps");
 		command.addOption(DUMP_DELAY, "The delay until the first dump is triggered");
+		command.addOption(EXIT_AFTER_LAST_DUMP,
+				"If set to 'true', the VM will be exited after the last dump is triggered.");
 	}
 }

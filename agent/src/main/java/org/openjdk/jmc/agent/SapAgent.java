@@ -182,6 +182,16 @@ public class SapAgent {
 			System.setProperty("com.sap.jvm.jmcagent.options." + configName, configProp.toString());
 		}
 
+		// If we added our boot jar, check the options now.
+		if (addedBootJar) {
+			Class<?> commands = Class.forName("org.openjdk.jmc.agent.sap.boot.commands.Commands", true, null);
+			java.lang.reflect.Method checkOptions = commands.getDeclaredMethod("checkCommands");
+
+			if (!(Boolean) checkOptions.invoke(null)) {
+				System.exit(1);
+			}
+		}
+
 		TransformerFactory tf = TransformerFactory.newInstance();
 		javax.xml.transform.Transformer trans = tf.newTransformer();
 		StringWriter sw = new StringWriter();

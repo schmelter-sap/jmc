@@ -1,0 +1,60 @@
+package org.openjdk.jmc.agent.sap.boot.commands;
+
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.Arrays;
+
+public class Commands {
+
+	public static final Command[] commands = new Command[] {SystemPropChangeCommand.enableCommand,
+			UnsafeMemoryAllocationCommand.enableCommand};
+
+	public static boolean checkCommands() {
+		for (Command command : commands) {
+			String optionsLine = AccessController.doPrivileged(new PrivilegedAction<String>() {
+				public String run() {
+					return System.getProperty("com.sap.jvm.jmcagent.options." + command.getName(), null);
+				}
+			});
+
+			if (optionsLine == null) {
+				continue;
+			}
+
+			CommandArguments args = new CommandArguments(optionsLine, command);
+
+			if (args.hasHelpOption()) {
+				printHelp(command);
+
+				return false;
+			}
+
+			String unknownArgument = args.getUnknownArgument();
+
+			if (unknownArgument != null) {
+				System.err
+						.println("Unknown argument '" + unknownArgument + "' for command '" + command.getName() + "'.");
+				printHelp(command);
+
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private static void printHelp(Command command) {
+		System.err.println("Help for command '" + command.getName() + "':");
+		System.err.println("Description: " + command.getDescription());
+		String[] options = command.getOptions();
+		Arrays.sort(options, String.CASE_INSENSITIVE_ORDER);
+
+		if (options.length > 0) {
+			System.err.println("The following options are supported:");
+
+			for (String option : options) {
+				System.err.println(option + ": " + command.getOptionHJelp(option));
+			}
+		}
+	}
+}

@@ -22,17 +22,17 @@
  *
  */
 
-package org.openjdk.jmc.agent.converters.sap;
+package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Properties;
 
-import org.openjdk.jmc.agent.util.sap.Command;
-import org.openjdk.jmc.agent.util.sap.CommandArguments;
-import org.openjdk.jmc.agent.util.sap.JdkLogging;
+import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.commands.SystemPropChangeCommand;
+import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
-public class SystemPropChangeLogger {
+public class SystemPropChangeLogger extends SystemPropChangeCommand {
 	private static final Properties systemProps = AccessController.doPrivileged(new PrivilegedAction<Properties>() {
 		public Properties run() {
 			return System.getProperties();
@@ -41,11 +41,9 @@ public class SystemPropChangeLogger {
 
 	private static final ThreadLocal<String> usedKey = new ThreadLocal<String>();
 	private static final ThreadLocal<String> usedValue = new ThreadLocal<String>();
-	private static final Command command = new Command("traceSysPropsChange",
-			"Traces changes to the system properties.");
 
 	public static boolean logProperties(Properties props) {
-		CommandArguments args = new CommandArguments(command);
+		CommandArguments args = new CommandArguments(enableCommand);
 		String key = usedKey.get();
 		assert key == null;
 		String val = usedValue.get();
