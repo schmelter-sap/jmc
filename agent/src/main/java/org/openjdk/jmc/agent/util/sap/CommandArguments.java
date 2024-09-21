@@ -32,6 +32,14 @@ public class CommandArguments {
 		return defaultResult;
 	}
 
+	public boolean getBoolean(String argumentName, boolean defaultResult) {
+		if (args.containsKey(argumentName)) {
+			return Boolean.parseBoolean(args.get(argumentName));
+		}
+
+		return defaultResult;
+	}
+
 	public Pattern getPattern(String argumentName, Pattern defaultResult) {
 		if (args.containsKey(argumentName)) {
 			return Pattern.compile(args.get(argumentName));
@@ -78,6 +86,12 @@ public class CommandArguments {
 
 		while (!rest.isEmpty()) {
 			long part = 0;
+			boolean isNeg = false;
+
+			if (rest.startsWith("-")) {
+				isNeg = true;
+				rest = rest.substring(1);
+			}
 
 			while (!rest.isEmpty()) {
 				int c = rest.charAt(0);
@@ -91,7 +105,7 @@ public class CommandArguments {
 			}
 
 			if (rest.isEmpty()) {
-				result += part;
+				result += part * (isNeg ? -1 : 1);
 				break;
 			}
 
@@ -99,7 +113,7 @@ public class CommandArguments {
 
 			for (int i = 0; i < suffixes.length; ++i) {
 				if (rest.charAt(0) == suffixes[i]) {
-					result += part * scale[i];
+					result += part * scale[i] * (isNeg ? -1 : 1);
 					found = true;
 					break;
 				}

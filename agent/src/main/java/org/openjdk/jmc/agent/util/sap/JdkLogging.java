@@ -74,6 +74,11 @@ public class JdkLogging {
 		}
 	}
 
+	public static void log(CommandArguments args, String msg) {
+		PrintStream stream = getStream(args);
+		stream.println(msg);
+	}
+
 	public static void logWithStack(CommandArguments args, String msg) {
 		PrintStream stream = getStream(args);
 		stream.println(msg);

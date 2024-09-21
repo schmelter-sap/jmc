@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.openjdk.jmc.agent.util.sap.AutomaticDumps;
 import org.openjdk.jmc.agent.util.sap.Command;
 import org.openjdk.jmc.agent.util.sap.CommandArguments;
+import org.openjdk.jmc.agent.util.sap.JdkLogging;
 
 public class UnsafeMemoryAllocationConverter {
 
@@ -18,6 +19,7 @@ public class UnsafeMemoryAllocationConverter {
 	private static final HashMap<Long, AllocationSite> activeAllocations = new HashMap<>();
 	private static final String MAX_FRAMES = "maxFrames";
 	private static final String MIN_SIZE = "minSize";
+	private static final String MIN_INCREASE = "minIncrease";
 	private static final String MIN_PERCENTAGE = "minPercentage";
 	private static final String MIN_AGE = "minAge";
 	private static final String MAX_AGE = "maxAge";
@@ -32,8 +34,9 @@ public class UnsafeMemoryAllocationConverter {
 		dumpCommand = new Command(
 				"dumnpUnsafeAllocations", "Dump the currently active jdk.internal.misc.Unsafe allocatios.",
 				MAX_FRAMES,	"The maximum number of frame to use for stack traces.",
-				MIN_SIZE, "The minimum size of the live allocations to dump the result",
-				MIN_PERCENTAGE, "The minimum percentage compared to the last dump",
+				MIN_SIZE, "The minimum size of the live allocations to dump the result.",
+				MIN_SIZE, "The increase in allocated size fopr a new dump to be printed.",
+				MIN_PERCENTAGE, "The minimum percentage compared to the last dump to print a dump.",
 				MIN_AGE, "The minimum age in minutes to include an allocation in the output.",
 				MAX_AGE, "The maximum age in minutes to include an allocation in the output.",				
 				MUST_CONTAIN, "A regexp which must match at least one frame to be printed.",
@@ -43,8 +46,8 @@ public class UnsafeMemoryAllocationConverter {
 		// spotless:on
 
 		AutomaticDumps.addOptions(enableCommand);
-		AutomaticDumps.registerDump(new CommandArguments(enableCommand),
-				(CommandArguments args) -> printActiveAllocations(System.out, args));
+		AutomaticDumps.registerDump(new CommandArguments(enableCommand), "Unsafe native memory allocation",
+				(CommandArguments args) -> printActiveAllocations(args));
 	}
 
 	public static long logSize(long size) {
@@ -132,11 +135,12 @@ public class UnsafeMemoryAllocationConverter {
 		return ptr;
 	}
 
-	public static boolean printActiveAllocations(PrintStream ps) {
-		return printActiveAllocations(ps, new CommandArguments(enableCommand));
+	public static boolean printActiveAllocations() {
+		return printActiveAllocations(new CommandArguments(enableCommand));
 	}
 
-	public static boolean printActiveAllocations(PrintStream ps, CommandArguments args) {
+	public static boolean printActiveAllocations(CommandArguments args) {
+		PrintStream ps = JdkLogging.getStream(args);
 		DumpFilter filter = new DumpFilter(args);
 
 		synchronized (activeAllocations) {
@@ -145,6 +149,10 @@ public class UnsafeMemoryAllocationConverter {
 			}
 
 			if (totalSize < lastDumpSize * filter.minPercentageIncrease) {
+				return false;
+			}
+
+			if ((filter.minIncrease >= 0) && (totalSize < lastDumpSize + filter.minIncrease)) {
 				return false;
 			}
 
@@ -197,7 +205,7 @@ public class UnsafeMemoryAllocationConverter {
 			}
 
 			StackTraceElement[] frames = stack.getStackTrace();
-			int framesToSkip = 3;
+			int framesToSkip = 2;
 			int maxFrames = Math.min(filter.maxFrames + framesToSkip, frames.length);
 
 			if (filter.mustContain != null) {
@@ -239,6 +247,7 @@ public class UnsafeMemoryAllocationConverter {
 	public static class DumpFilter {
 		public final int maxFrames;
 		public final long minSize;
+		public final long minIncrease;
 		public final double minPercentageIncrease;
 		public final long minAge;
 		public final long maxAge;
@@ -248,7 +257,8 @@ public class UnsafeMemoryAllocationConverter {
 		public DumpFilter(CommandArguments args) {
 			this.maxFrames = args.getInt(MAX_FRAMES, 16);
 			this.minSize = args.getSize(MIN_SIZE, 0);
-			this.minPercentageIncrease = 1.0 + 0.01 * args.getLong(MIN_PERCENTAGE, 0);
+			this.minIncrease = args.getSize(MIN_INCREASE, -1);
+			this.minPercentageIncrease = 0.01 * args.getLong(MIN_PERCENTAGE, 0);
 			this.minAge = 1000 * args.getDurationInSeconds(MIN_AGE, 0);
 			this.maxAge = 1000 * args.getDurationInSeconds(MAX_AGE, 365 * 24 * 3600);
 			this.mustContain = args.getPattern(MUST_CONTAIN, null);

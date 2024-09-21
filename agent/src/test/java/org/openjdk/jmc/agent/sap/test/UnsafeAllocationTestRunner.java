@@ -27,10 +27,43 @@ public class UnsafeAllocationTestRunner {
 	}
 
 	public static void main(String[] args) {
+		int increasePerAlloc = args.length > 0 ? Integer.parseInt(args[0]) : 256;
+		int maxDepth = args.length > 1 ? Integer.parseInt(args[1]) : 10;
+		long addr = 0;
+		long allocSize = increasePerAlloc;
+
 		while (true) {
-			long addr1 = allocateMemory(1000);
-			addr1 = reallocateMemory(addr1, 2000);
-			freeMemory(addr1);
+			addr = doAlloc1(addr, allocSize, Math.max(2, (int) (Math.random() * maxDepth)));
+			allocSize += increasePerAlloc;
+		}
+	}
+
+	public static long doAllocImpl(long addr, long allocSize) {
+		long dummy = allocateMemory(allocSize);
+		freeMemory(dummy);
+		addr = reallocateMemory(addr, allocSize / 2);
+		addr = reallocateMemory(addr, allocSize);
+
+		return addr;
+	}
+
+	public static long doAlloc1(long addr, long allocSize, int depth) {
+		if (depth == 0) {
+			return doAllocImpl(addr, allocSize);
+		} else if (Math.random() < 0.5) {
+			return doAlloc1(addr, allocSize, depth - 1);
+		} else {
+			return doAlloc2(addr, allocSize, depth - 1);
+		}
+	}
+
+	public static long doAlloc2(long addr, long allocSize, int depth) {
+		if (depth == 0) {
+			return doAllocImpl(addr, allocSize);
+		} else if (Math.random() < 0.5) {
+			return doAlloc1(addr, allocSize, depth - 1);
+		} else {
+			return doAlloc2(addr, allocSize, depth - 1);
 		}
 	}
 
