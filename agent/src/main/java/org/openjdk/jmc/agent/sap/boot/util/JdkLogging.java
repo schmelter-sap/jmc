@@ -26,6 +26,8 @@ package org.openjdk.jmc.agent.sap.boot.util;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
 
@@ -37,12 +39,33 @@ public class JdkLogging {
 	private static HashMap<String, PrintStream> outputs = new HashMap<>();
 
 	public static void addOptions(Command command) {
-		command.addOption(LOG_DEST, "Specified where the output shows up. Can be 'stdout', 'stderr' or a file name. "
-				+ "Prepend the filename with a '+' to append to the file intead of overwriting it.");
+		command.addOption(LOG_DEST,
+				"Specified where the output shows up. Can be 'stdout', 'stderr', 'none' or a file name. "
+						+ "Prepend the filename with a '+' to append to the file intead of overwriting it.");
 	}
 
 	public static PrintStream getStream(CommandArguments args) {
 		String dest = args.getString(LOG_DEST, "stderr");
+
+		if ("none".equals(dest)) {
+			return new PrintStream(new OutputStream() {
+
+				@Override
+				public void write(byte[] b) throws IOException {
+					// Just throw everything away.
+				}
+
+				@Override
+				public void write(byte[] b, int off, int len) throws IOException {
+					// Just throw everything away.
+				}
+
+				@Override
+				public void write(int b) throws IOException {
+					// Just throw everything away.
+				}
+			});
+		}
 
 		if ("stdout".equals(dest)) {
 			return System.out;
