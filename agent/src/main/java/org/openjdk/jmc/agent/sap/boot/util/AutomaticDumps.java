@@ -56,9 +56,9 @@ public class AutomaticDumps {
 	}
 
 	public static void addOptions(Command command) {
-		command.addOption(DUMP_COUNT, "The maximum number of dumps to perform");
-		command.addOption(DUMP_INTERVAL, "The interval between successive dumnps");
-		command.addOption(DUMP_DELAY, "The delay until the first dump is triggered");
+		command.addOption(DUMP_COUNT, "The maximum number of dumps to perform.");
+		command.addOption(DUMP_INTERVAL, "The interval between successive dumnps.");
+		command.addOption(DUMP_DELAY, "The delay until the first dump is triggered.");
 		command.addOption(EXIT_AFTER_LAST_DUMP,
 				"If set to 'true', the VM will be exited after the last dump is triggered.");
 	}

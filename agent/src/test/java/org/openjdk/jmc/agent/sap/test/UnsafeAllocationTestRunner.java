@@ -39,10 +39,10 @@ public class UnsafeAllocationTestRunner {
 	}
 
 	public static long doAllocImpl(long addr, long allocSize) {
-		long dummy = allocateMemory(allocSize);
-		freeMemory(dummy);
-		addr = reallocateMemory(addr, allocSize / 2);
+		long dummy = allocateMemory(1024);
+		addr = reallocateMemory(addr, Math.max(0, allocSize - 1024));
 		addr = reallocateMemory(addr, allocSize);
+		freeMemory(dummy);
 
 		return addr;
 	}

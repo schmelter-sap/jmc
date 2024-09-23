@@ -5,6 +5,7 @@ import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
 public class UnsafeMemoryAllocationCommand {
 	public static final String MAX_FRAMES = "maxFrames";
+	public static final String MIN_STACK_SIZE = "minStackSize";
 	public static final String MIN_SIZE = "minSize";
 	public static final String MIN_INCREASE = "minIncrease";
 	public static final String MIN_PERCENTAGE = "minPercentage";
@@ -21,7 +22,7 @@ public class UnsafeMemoryAllocationCommand {
 				"dumpUnsafeAllocations", "Dump the currently active jdk.internal.misc.Unsafe allocatios.",
 				MAX_FRAMES,	"The maximum number of frame to use for stack traces.",
 				MIN_SIZE, "The minimum size of the live allocations to dump the result.",
-				MIN_SIZE, "The increase in allocated size fopr a new dump to be printed.",
+				MIN_STACK_SIZE, "The minimum size of a stack to be included in a dump.",
 				MIN_PERCENTAGE, "The minimum percentage compared to the last dump to print a dump.",
 				MIN_AGE, "The minimum age in minutes to include an allocation in the output.",
 				MAX_AGE, "The maximum age in minutes to include an allocation in the output.",				
