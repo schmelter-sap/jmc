@@ -9,7 +9,7 @@
             <label>sysPropsChanged</label>
             <description>Change of system property</description>
             <class>java.util.Properties</class>
-            <stacktrace>false</stacktrace>
+            <stacktrace>true</stacktrace>
             <rethrow>false</rethrow>
             <path>jdk/log/sysProps/changed</path>
             <method>
@@ -30,18 +30,18 @@
             </method>
             <fields>
                 <field>
-                    <name>properties</name>
+                    <name>isSystemProperties</name>
                     <expression>this</expression>
-                    <description>The properties object</description>
+                    <description>Is this change for the System properties</description>
                     <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logProperties(Ljava/util/Properties;)Z</converter>
                 </field>
             </fields>
         </event>
-        <event id="jdk.log.sysPropsChanged">
+        <event id="jdk.log.sysPropsRemoved">
             <label>sysPropsRemoved</label>
             <description>Removing of system property</description>
             <class>java.util.Properties</class>
-            <stacktrace>false</stacktrace>
+            <stacktrace>true</stacktrace>
             <rethrow>false</rethrow>
             <path>jdk/log/sysProps/changed</path>
             <method>
@@ -57,9 +57,9 @@
             </method>
             <fields>
                 <field>
-                    <name>properties</name>
+                    <name>isSystemProperties</name>
                     <expression>this</expression>
-                    <description>The properties object</description>
+                    <description>Is this change for the System properties</description>
                     <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logProperties(Ljava/util/Properties;)Z</converter>
                 </field>
             </fields>

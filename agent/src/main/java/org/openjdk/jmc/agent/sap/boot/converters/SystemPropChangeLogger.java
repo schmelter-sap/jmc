@@ -67,25 +67,27 @@ public class SystemPropChangeLogger extends SystemPropChangeCommand {
 		return false;
 	}
 
-	public static boolean logKey(Object key) {
+	public static String logKey(Object key) {
 		assert usedKey.get() == null;
 
 		if (key instanceof String) {
 			usedKey.set((String) key);
 
-			return true;
+			return (String) key;
 		}
 
-		return false;
+		return "<Object>";
 	}
 
-	public static boolean logValue(Object value) {
+	public static String logValue(Object value) {
 		assert usedValue.get() == null;
 
 		if ((value instanceof String) || (value == null)) {
 			usedValue.set((String) value);
+
+			return (String) value;
 		}
 
-		return true;
+		return "<Object>";
 	}
 }

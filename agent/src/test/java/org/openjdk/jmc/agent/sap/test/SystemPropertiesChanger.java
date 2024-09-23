@@ -12,8 +12,8 @@ public class SystemPropertiesChanger {
 		System.setProperty("TEST_KEY", "TEST_VAL");
 		System.getProperties().remove("TEST_KEY");
 		Properties props = new Properties();
-		props.put("TEST_KEY", "TEST_ADD_VALUE");
-		props.setProperty("TEST_KEY", "TEST_CHNAGE_VALUE");
-		props.remove("TEST_KEY");
+		props.put("TEST_KEY_NO_SYS", "TEST_ADD_VALUE");
+		props.setProperty("TEST_KEY_NO_SYS", "TEST_CHANGE_VALUE");
+		props.remove("TEST_KEY_NO_SYS");
 	}
 }
