@@ -5,7 +5,7 @@ import org.openjdk.jmc.agent.sap.boot.commands.UnsafeMemoryAllocationCommand;
 import org.openjdk.jmc.agent.sap.boot.util.AutomaticDumps;
 import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
-public class UnsafeMemoryAllocationConverter extends UnsafeMemoryAllocationCommand {
+public class UnsafeMemoryAllocationLogger extends UnsafeMemoryAllocationCommand {
 
 	private static final ThreadLocal<Long> sizeKey = new ThreadLocal<Long>();
 	private static final ThreadLocal<Long> ptrKey = new ThreadLocal<Long>();

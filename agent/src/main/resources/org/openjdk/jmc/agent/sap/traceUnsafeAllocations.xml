@@ -19,13 +19,13 @@
                     <parameter index="0">
                         <name>size</name>
                         <description>The allocated size</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationConverter.logSize(J)J</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger.logSize(J)J</converter>
                     </parameter>
                 </parameters>
                 <returnvalue>
                     <name>adresss</name>
                     <description>the allocated address</description>
-                    <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationConverter.logResult(J)J</converter>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger.logResult(J)J</converter>
                 </returnvalue>
             </method>
         </event>
@@ -43,18 +43,18 @@
                     <parameter index="0">
                         <name>size</name>
                         <description>The old memory address</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationConverter.logPtr(J)J</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger.logPtr(J)J</converter>
                     </parameter>
                     <parameter index="1">
                         <name>size</name>
                         <description>The new allocated size</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationConverter.logSize(J)J</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger.logSize(J)J</converter>
                     </parameter>
                 </parameters>
                 <returnvalue>
                     <name>adresss</name>
                     <description>the allocated address</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationConverter.logResult(J)J</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger.logResult(J)J</converter>
                 </returnvalue>
             </method>
         </event>
@@ -72,7 +72,7 @@
                     <parameter index="0">
                         <name>size</name>
                         <description>The freed memory address</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationConverter.logFree(J)J</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger.logFree(J)J</converter>
                     </parameter>
                 </parameters>
             </method>

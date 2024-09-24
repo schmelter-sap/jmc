@@ -45,7 +45,7 @@ public class JdkLogging {
 	}
 
 	public static boolean doesOutput(CommandArguments args) {
-		return "none".equals(args.getString(LOG_DEST, "stderr"));
+		return !"none".equals(args.getString(LOG_DEST, "stderr"));
 	}
 
 	public static PrintStream getStream(CommandArguments args) {
