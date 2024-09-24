@@ -4,13 +4,14 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
 
+import org.openjdk.jmc.agent.sap.boot.converters.LocaleChangeLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger;
 
 public class Commands {
 
-	public static final Command[] commands = new Command[] {SystemPropChangeLogger.command,
+	public static final Command[] commands = new Command[] {LocaleChangeLogger.command, SystemPropChangeLogger.command,
 			TimeZoneChangeLogger.command, UnsafeMemoryAllocationLogger.command};
 
 	public static void printAllCommands() {
