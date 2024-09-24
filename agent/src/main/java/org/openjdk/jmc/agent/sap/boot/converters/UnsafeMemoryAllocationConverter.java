@@ -3,6 +3,7 @@ package org.openjdk.jmc.agent.sap.boot.converters;
 import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
 import org.openjdk.jmc.agent.sap.boot.commands.UnsafeMemoryAllocationCommand;
 import org.openjdk.jmc.agent.sap.boot.util.AutomaticDumps;
+import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
 public class UnsafeMemoryAllocationConverter extends UnsafeMemoryAllocationCommand {
 
@@ -79,6 +80,10 @@ public class UnsafeMemoryAllocationConverter extends UnsafeMemoryAllocationComma
 	}
 
 	public static boolean printActiveAllocations(CommandArguments args) {
-		return allocations.copy().printActiveAllocations(args);
+		if (JdkLogging.doesOutput(args)) {
+			return allocations.copy().printActiveAllocations(args);
+		}
+
+		return false;
 	}
 }

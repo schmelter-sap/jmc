@@ -44,6 +44,10 @@ public class JdkLogging {
 						+ "Prepend the filename with a '+' to append to the file intead of overwriting it.");
 	}
 
+	public static boolean doesOutput(CommandArguments args) {
+		return "none".equals(args.getString(LOG_DEST, "stderr"));
+	}
+
 	public static PrintStream getStream(CommandArguments args) {
 		String dest = args.getString(LOG_DEST, "stderr");
 
