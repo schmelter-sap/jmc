@@ -51,6 +51,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.openjdk.jmc.agent.impl.DefaultTransformRegistry;
 import org.openjdk.jmc.agent.jmx.AgentManagementFactory;
+import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.Commands;
 import org.openjdk.jmc.agent.util.ModuleUtils;
 import org.w3c.dom.Document;
@@ -127,6 +128,20 @@ public class SapAgent {
 		}
 	}
 
+	private static StringBuilder addCommandOptions(String commandName, StringBuilder options) {
+		if (addedBootJar) {
+			// If the boot jar was not yet added, we cannot have encountered a supported command.
+			Command command = Commands.getCommand(commandName);
+
+			if (command != null) {
+				command.preTraceInit();
+				System.setProperty("com.sap.jvm.jmcagent.options." + commandName, options.toString());
+			}
+		}
+
+		return new StringBuilder();
+	}
+
 	private static byte[] getXmlConfig(String agentArguments) throws Exception {
 		if (agentArguments.equals("help")) {
 			ensureBootJarAdded();
@@ -157,13 +172,8 @@ public class SapAgent {
 				configProp.append(part).append(',');
 			} else {
 				Document doc = factory.newDocumentBuilder().parse(getStreamForConfig(part));
-
-				if (configName != null) {
-					System.setProperty("com.sap.jvm.jmcagent.options." + configName, configProp.toString());
-				}
-
+				configProp = addCommandOptions(configName, configProp);
 				configName = part;
-				configProp = new StringBuilder();
 
 				if (getBool(doc, "allowtostring", false)) { //$NON-NLS-1$
 					setText(base, "allowtostring", "true"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -192,9 +202,7 @@ public class SapAgent {
 			}
 		}
 
-		if (configName != null) {
-			System.setProperty("com.sap.jvm.jmcagent.options." + configName, configProp.toString());
-		}
+		addCommandOptions(configName, configProp);
 
 		// If we added our boot jar, check the options now.
 		if (addedBootJar) {

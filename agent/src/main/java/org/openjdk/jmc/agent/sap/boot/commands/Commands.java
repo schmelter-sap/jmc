@@ -5,11 +5,13 @@ import java.security.PrivilegedAction;
 import java.util.Arrays;
 
 import org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger;
+import org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger;
+import org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger;
 
 public class Commands {
 
 	public static final Command[] commands = new Command[] {SystemPropChangeLogger.command,
-			UnsafeMemoryAllocationCommand.enableCommand};
+			TimeZoneChangeLogger.command, UnsafeMemoryAllocationLogger.command};
 
 	public static void printAllCommands() {
 		System.out.println("The following commands are suppored:");
@@ -19,6 +21,16 @@ public class Commands {
 		}
 
 		System.out.println("Use <command>,help to get further help for a specific command.");
+	}
+
+	public static Command getCommand(String name) {
+		for (Command command : commands) {
+			if (command.getName().equals(name)) {
+				return command;
+			}
+		}
+
+		return null;
 	}
 
 	public static boolean checkCommands() {

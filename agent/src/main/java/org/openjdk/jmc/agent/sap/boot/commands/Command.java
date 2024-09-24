@@ -50,4 +50,8 @@ public class Command {
 	public String getOptionHJelp(String name) {
 		return optionsWithHelp.get(name);
 	}
+
+	public void preTraceInit() {
+		// Nothing to do by default.
+	}
 }

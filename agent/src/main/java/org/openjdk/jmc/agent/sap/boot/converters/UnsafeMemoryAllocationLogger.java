@@ -1,18 +1,21 @@
 package org.openjdk.jmc.agent.sap.boot.converters;
 
+import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
 import org.openjdk.jmc.agent.sap.boot.commands.UnsafeMemoryAllocationCommand;
 import org.openjdk.jmc.agent.sap.boot.util.AutomaticDumps;
 import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
-public class UnsafeMemoryAllocationLogger extends UnsafeMemoryAllocationCommand {
+public class UnsafeMemoryAllocationLogger {
 
 	private static final ThreadLocal<Long> sizeKey = new ThreadLocal<Long>();
 	private static final ThreadLocal<Long> ptrKey = new ThreadLocal<Long>();
 	private static final AllocationStatistic allocations = new AllocationStatistic();
 
+	public static final Command command = UnsafeMemoryAllocationCommand.enableCommand;
+
 	static {
-		AutomaticDumps.registerDump(new CommandArguments(enableCommand), "Unsafe native memory allocation",
+		AutomaticDumps.registerDump(new CommandArguments(command), "Unsafe native memory allocation",
 				(CommandArguments args) -> printActiveAllocations(args));
 	}
 
@@ -76,7 +79,7 @@ public class UnsafeMemoryAllocationLogger extends UnsafeMemoryAllocationCommand 
 	}
 
 	public static boolean printActiveAllocations() {
-		return printActiveAllocations(new CommandArguments(enableCommand));
+		return printActiveAllocations(new CommandArguments(command));
 	}
 
 	public static boolean printActiveAllocations(CommandArguments args) {
