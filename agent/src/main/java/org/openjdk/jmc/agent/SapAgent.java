@@ -51,6 +51,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.openjdk.jmc.agent.impl.DefaultTransformRegistry;
 import org.openjdk.jmc.agent.jmx.AgentManagementFactory;
+import org.openjdk.jmc.agent.sap.boot.commands.Commands;
 import org.openjdk.jmc.agent.util.ModuleUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -83,32 +84,39 @@ public class SapAgent {
 		}
 	}
 
+	private static void ensureBootJarAdded() throws IOException {
+		if (addedBootJar) {
+			return;
+		}
+
+		ClassLoader cl = SapAgent.class.getClassLoader();
+		addedBootJar = true;
+
+		// Find out where the agent jar is, since the boot jar should live
+		// there too.
+		URL url = cl.getResource(SapAgent.class.getName().replace('.', '/') + ".class");
+		String file = url.getFile();
+
+		if (!file.startsWith("file:/")) {
+			throw new RuntimeException("Could not determine agent jar from " + file);
+		}
+
+		String jar = file.substring(6, file.indexOf(".jar!")) + "-boot.jar";
+
+		if (!new File(jar).canRead()) {
+			throw new RuntimeException("Could not find boot jar at " + jar);
+		}
+
+		instr.appendToBootstrapClassLoaderSearch(new JarFile(jar));
+	}
+
 	private static InputStream getStreamForConfig(String config) throws Exception {
 		try {
 			return new FileInputStream(config);
 		} catch (FileNotFoundException e) {
+			ensureBootJarAdded();
+
 			ClassLoader cl = SapAgent.class.getClassLoader();
-
-			if (!addedBootJar) {
-				addedBootJar = true;
-				// Find out where the agent jar is, since the boot jar should live
-				// there too.
-				URL url = cl.getResource(SapAgent.class.getName().replace('.', '/') + ".class");
-				String file = url.getFile();
-
-				if (!file.startsWith("file:/")) {
-					throw new RuntimeException("Could not determine agent jar from " + file);
-				}
-
-				String jar = file.substring(6, file.indexOf(".jar!")) + "-boot.jar";
-
-				if (!new File(jar).canRead()) {
-					throw new RuntimeException("Could not find boot jar at " + jar);
-				}
-
-				instr.appendToBootstrapClassLoaderSearch(new JarFile(jar));
-			}
-
 			InputStream is = cl.getResourceAsStream(CONFIGS_PATH + config + ".xml");
 
 			if (is != null) {
@@ -120,6 +128,12 @@ public class SapAgent {
 	}
 
 	private static byte[] getXmlConfig(String agentArguments) throws Exception {
+		if (agentArguments.equals("help")) {
+			ensureBootJarAdded();
+			Commands.printAllCommands();
+			System.exit(0);
+		}
+
 		String[] parts = agentArguments.split("(?<!\\\\),");
 		StringBuilder configProp = new StringBuilder();
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newDefaultInstance();

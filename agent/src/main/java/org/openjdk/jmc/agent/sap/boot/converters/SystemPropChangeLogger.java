@@ -29,21 +29,24 @@ import java.security.PrivilegedAction;
 import java.util.Properties;
 
 import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-import org.openjdk.jmc.agent.sap.boot.commands.SystemPropChangeCommand;
+import org.openjdk.jmc.agent.sap.boot.commands.OutputCommand;
 import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
-public class SystemPropChangeLogger extends SystemPropChangeCommand {
+public class SystemPropChangeLogger {
 	private static final Properties systemProps = AccessController.doPrivileged(new PrivilegedAction<Properties>() {
 		public Properties run() {
 			return System.getProperties();
 		}
 	});
 
+	public static final OutputCommand command = new OutputCommand("traceSysPropsChange",
+			"Traces changes to the system properties.");
+
 	private static final ThreadLocal<String> usedKey = new ThreadLocal<String>();
 	private static final ThreadLocal<String> usedValue = new ThreadLocal<String>();
 
 	public static boolean logProperties(Properties props) {
-		CommandArguments args = new CommandArguments(enableCommand);
+		CommandArguments args = new CommandArguments(command);
 		String key = usedKey.get();
 		assert key == null;
 		String val = usedValue.get();

@@ -4,10 +4,22 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
 
+import org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger;
+
 public class Commands {
 
-	public static final Command[] commands = new Command[] {SystemPropChangeCommand.enableCommand,
+	public static final Command[] commands = new Command[] {SystemPropChangeLogger.command,
 			UnsafeMemoryAllocationCommand.enableCommand};
+
+	public static void printAllCommands() {
+		System.out.println("The following commands are suppored:");
+
+		for (Command command : commands) {
+			System.out.println(command.getName() + ": " + command.getDescription());
+		}
+
+		System.out.println("Use <command>,help to get further help for a specific command.");
+	}
 
 	public static boolean checkCommands() {
 		for (Command command : commands) {
