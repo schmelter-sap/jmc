@@ -1,0 +1,58 @@
+<jfragent>
+    <config>
+        <classprefix>__JFREvent</classprefix>
+        <allowtostring>false</allowtostring>
+        <allowconverter>true</allowconverter>
+    </config>
+    <events>
+        <event id="jdk.log.fileInputStreamString">
+            <label>fileInputStreamByString</label>
+            <description>Traces the FileInputStream constructor taking a String</description>
+            <class>java.io.FileInputStream</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <location>EXIT</location>
+            <path>jdk/log/file/statistic</path>
+            <method>
+                <name>FileInputStream</name>
+                <descriptor>(Ljava/lang/String;)V</descriptor>
+                <parameters>
+                    <parameter index="0">
+                        <name>filename</name>
+                        <description>The file nbame</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileInputStream(Ljava/lang/String;)Ljava/lang/String;</converter>
+                    </parameter>
+                </parameters>
+            </method>
+            <fields>
+                <field>
+                    <name>hasOpened</name>
+                    <expression>this</expression>
+                    <description>has the file been opened</description>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileInputStream(Ljava/io/FileInputStream;)Z</converter>
+                </field>
+            </fields>
+        </event>
+        <event id="jdk.log.fileInputStreamClose">
+            <label>fileInputStreamClose</label>
+            <description>Traces the FileInputStream close calls</description>
+            <class>java.io.FileInputStream</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <location>EXIT</location>
+            <path>jdk/log/file/statistic</path>
+            <method>
+                <name>close</name>
+                <descriptor>()V</descriptor>
+            </method>
+            <fields>
+                <field>
+                    <name>closedFile</name>
+                    <expression>this</expression>
+                    <description>The closed file</description>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.closeFileInputStream(Ljava/io/FileInputStream;)Ljava/lang/String;</converter>
+                </field>
+            </fields>
+        </event>
+    </events>
+</jfragent>
