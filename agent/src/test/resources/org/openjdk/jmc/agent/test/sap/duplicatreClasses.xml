@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jfragent>
+	<events>
+		<event id="test.jfr.duplicateClasses">
+			<label>Tracking duplicate classes</label>
+			<description>Tracks two classes with the same name.</description>
+			<path>test/duplicateClasses</path>
+			<stacktrace>true</stacktrace>
+			<class>org.openjdk.jmc.agent.sap.test.DuplicateTracedClasses</class>
+			<method>
+				<name>test</name>
+				<descriptor>(Ljava/lang/String;)V</descriptor>
+				<parameters>
+					<parameter index="0">
+						<name>String Attribute</name>
+						<description>The first parameter</description>
+					</parameter>
+				</parameters>
+			</method>
+			<location>ENTRY</location>
+		</event>
+	</events>
+</jfragent>
