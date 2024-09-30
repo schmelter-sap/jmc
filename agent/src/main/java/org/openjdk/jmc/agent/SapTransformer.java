@@ -52,7 +52,7 @@ public class SapTransformer implements ClassFileTransformer {
 		// We need to access the jfr module.
 		if (!module.canRead(jfrModule)) {
 			// Create a class in the module which grants the access. 
-			ClassWriter cw = new ClassWriter(0);
+			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 			String name = className.replace('/', '.') + "_$MakeJFRModuleReadable";
 			cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER, name.replace('.', '/'), null,
 					"java/lang/Object", null);
@@ -62,6 +62,8 @@ public class SapTransformer implements ClassFileTransformer {
 			Label l0 = new Label();
 			mv.visitLabel(l0);
 			mv.visitVarInsn(Opcodes.ALOAD, 0);
+			mv.visitInsn(Opcodes.DUP);
+			mv.visitMethodInsn(Opcodes.INVOKESPECIAL, name.replace('.', '/'), "<init>", "()V", false);
 			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
 			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getModule", "()Ljava/lang/Module;", false);
 			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/ModuleLayer", "boot", "()Ljava/lang/ModuleLayer;",
@@ -70,6 +72,7 @@ public class SapTransformer implements ClassFileTransformer {
 			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/ModuleLayer", "findModule",
 					"(Ljava/lang/String;)Ljava/util/Optional;", false);
 			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/util/Optional", "get", "()Ljava/lang/Object;", false);
+			mv.visitTypeInsn(Opcodes.CHECKCAST, "java/lang/Module");
 			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Module", "addReads",
 					"(Ljava/lang/Module;)Ljava/lang/Module;", false);
 			mv.visitInsn(Opcodes.RETURN);
