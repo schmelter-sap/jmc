@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jfragent>
+	<events>
+		<event id="test.jfr.jconsole">
+			<label>jconsole</label>
+			<description>JConsole main method</description>
+			<path>test/jconsole</path>
+			<stacktrace>true</stacktrace>
+			<class>sun.tools.jconsole.JConsole</class>
+			<method>
+				<name>main</name>
+				<descriptor>([Ljava/lang/String;)V</descriptor>
+				<parameters>
+					<parameter index="0">
+						<name>parameters</name>
+						<description>The parameters</description>
+					</parameter>
+				</parameters>
+			</method>
+			<location>ENTRY</location>
+		</event>
+	</events>
+</jfragent>
