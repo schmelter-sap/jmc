@@ -29,9 +29,9 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.openjdk.jmc.agent.util.TypeUtils;
 
 public class SapTransformer implements ClassFileTransformer {
@@ -52,19 +52,13 @@ public class SapTransformer implements ClassFileTransformer {
 		// We need to access the jfr module.
 		if (!module.canRead(jfrModule)) {
 			// Create a class in the module which grants the access. 
-			ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-			String name = className.replace('/', '.') + "_$MakeJFRModuleReadable";
-			cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER, name.replace('.', '/'), null,
-					"java/lang/Object", null);
+			ClassWriter cw = new ClassWriter(0);
+			String name = className + "_$MakeJFRModuleReadable";
+			cw.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER, name, null, "java/lang/Object", null);
 
-			MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null);
+			MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC + Opcodes.ACC_STATIC, "<clinit>", "()V", null, null);
 			mv.visitCode();
-			Label l0 = new Label();
-			mv.visitLabel(l0);
-			mv.visitVarInsn(Opcodes.ALOAD, 0);
-			mv.visitInsn(Opcodes.DUP);
-			mv.visitMethodInsn(Opcodes.INVOKESPECIAL, name.replace('.', '/'), "<init>", "()V", false);
-			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false);
+			mv.visitLdcInsn(Type.getObjectType(name));
 			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getModule", "()Ljava/lang/Module;", false);
 			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/ModuleLayer", "boot", "()Ljava/lang/ModuleLayer;",
 					false);
@@ -76,23 +70,18 @@ public class SapTransformer implements ClassFileTransformer {
 			mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Module", "addReads",
 					"(Ljava/lang/Module;)Ljava/lang/Module;", false);
 			mv.visitInsn(Opcodes.RETURN);
-			Label l1 = new Label();
-			mv.visitLabel(l1);
-			mv.visitLocalVariable("this", TypeUtils.parameterize(name.replace('.', '/')), null, l0, l1, 0);
-			mv.visitMaxs(1, 1);
+			mv.visitMaxs(2, 0);
 			mv.visitEnd();
 
 			cw.visitEnd();
 			byte[] bytes = cw.toByteArray();
 
 			try {
-				Class<?> cls = TypeUtils.defineClass(name, bytes, 0, bytes.length, loader, protectionDomain);
-				// Running the constructor make runs the code grants jfr module access.
-				cls.getDeclaredConstructor().newInstance();
-			} catch (IllegalAccessException | InstantiationException e) {
+				TypeUtils.defineClass(name.replace('/', '.'), bytes, 0, bytes.length, loader, protectionDomain);
+				// Trigger clinit to invoke the code. Needs no special permissions.
+				Class.forName(name.replace('/', '.'), true, loader);
+			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
-			} catch (Throwable t) {
-				t.printStackTrace();
 			}
 		}
 	}
