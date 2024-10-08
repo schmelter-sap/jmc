@@ -2,7 +2,6 @@ package org.openjdk.jmc.agent.sap.boot.commands;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.Arrays;
 
 import org.openjdk.jmc.agent.sap.boot.converters.LocaleChangeLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger;
@@ -69,17 +68,6 @@ public class Commands {
 	}
 
 	private static void printHelp(Command command) {
-		System.err.println("Help for command '" + command.getName() + "':");
-		System.err.println("Description: " + command.getDescription());
-		String[] options = command.getOptions();
-		Arrays.sort(options, String.CASE_INSENSITIVE_ORDER);
-
-		if (options.length > 0) {
-			System.err.println("The following options are supported:");
-
-			for (String option : options) {
-				System.err.println(option + ": " + command.getOptionHJelp(option));
-			}
-		}
+		command.printHelp(System.err);
 	}
 }

@@ -19,7 +19,7 @@ public class UnsafeMemoryAllocationCommand {
 	static {
 		// spotless:off
 		dumpCommand = new Command(
-				"dumpUnsafeAllocations", "Dump the currently active jdk.internal.misc.Unsafe allocatios.",
+				"unsafeAllocations", "Dump the currently active jdk.internal.misc.Unsafe allocatios.",
 				MAX_FRAMES,	"The maximum number of frame to use for stack traces.",
 				MIN_SIZE, "The minimum size of the live allocations to dump the result.",
 				MIN_STACK_SIZE, "The minimum size of a stack to be included in a dump.",

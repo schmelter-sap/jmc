@@ -13,9 +13,32 @@ public class Dumps {
 	public static final String DUMP_DELAY = "dumpDelay";
 	public static final String EXIT_AFTER_LAST_DUMP = "exitAfterLastDump";
 
-	private static final HashMap<String, Predicate<CommandArguments>> registeredDumps = new HashMap<>();
+	private static final HashMap<Command, Predicate<CommandArguments>> registeredDumps = new HashMap<>();
 
 	public static void performDump(String arguments) throws IOException {
+		if (arguments.equals("help")) {
+			System.out.println("The following dumps are supported:");
+
+			for (Command cmd : registeredDumps.keySet()) {
+				System.out.println(cmd.getName() + ": " + cmd.getDescription());
+			}
+
+			System.out.println("Use dump=help:<dump> for all options for a specific dump.");
+			return;
+		} else if (arguments.startsWith("help:")) {
+			String name = arguments.substring(5);
+
+			for (Command cmd : registeredDumps.keySet()) {
+				if (cmd.getName().equals(name)) {
+					cmd.printHelp(System.out);
+					return;
+				}
+			}
+
+			System.err.println("Could not find dump type '" + name + "'. Use dump=help for a list of supported types.");
+			return;
+		}
+
 		String[] parts = arguments.split(",");
 		String type = parts[0];
 
@@ -29,7 +52,7 @@ public class Dumps {
 		Predicate<CommandArguments> callback = null;
 
 		synchronized (Dumps.class) {
-			callback = registeredDumps.get(type);
+			callback = registeredDumps.get(new Command(type, ""));
 		}
 
 		if (callback == null) {
@@ -40,14 +63,12 @@ public class Dumps {
 		callback.test(args);
 	}
 
-	public static void registerDump(
-		CommandArguments args, String type, String name, Predicate<CommandArguments> callback) {
+	public static void registerDump(Command command, String name, Predicate<CommandArguments> callback) {
 		synchronized (Dumps.class) {
-			if (type != null) {
-				registeredDumps.put(type, callback);
-			}
+			registeredDumps.put(command, callback);
 		}
 
+		CommandArguments args = new CommandArguments(command);
 		long dumpCount = args.getLong(DUMP_COUNT, 0);
 
 		if (dumpCount != 0) {

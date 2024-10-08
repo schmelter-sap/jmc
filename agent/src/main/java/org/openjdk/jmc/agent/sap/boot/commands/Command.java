@@ -1,6 +1,9 @@
 package org.openjdk.jmc.agent.sap.boot.commands;
 
+import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class Command {
 	private final String name;
@@ -53,5 +56,37 @@ public class Command {
 
 	public void preTraceInit() {
 		// Nothing to do by default.
+	}
+
+	public void printHelp(PrintStream str) {
+		str.println("Help for command '" + getName() + "':");
+		str.println("Description: " + getDescription());
+		String[] options = getOptions();
+		Arrays.sort(options, String.CASE_INSENSITIVE_ORDER);
+
+		if (options.length > 0) {
+			str.println("The following options are supported:");
+
+			for (String option : options) {
+				str.println(option + ": " + getOptionHJelp(option));
+			}
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Command other = (Command) obj;
+		return Objects.equals(name, other.name);
 	}
 }
