@@ -3,7 +3,7 @@ package org.openjdk.jmc.agent.sap.boot.converters;
 import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
 import org.openjdk.jmc.agent.sap.boot.commands.UnsafeMemoryAllocationCommand;
-import org.openjdk.jmc.agent.sap.boot.util.AutomaticDumps;
+import org.openjdk.jmc.agent.sap.boot.util.Dumps;
 import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
 public class UnsafeMemoryAllocationLogger {
@@ -15,7 +15,7 @@ public class UnsafeMemoryAllocationLogger {
 	public static final Command command = UnsafeMemoryAllocationCommand.enableCommand;
 
 	static {
-		AutomaticDumps.registerDump(new CommandArguments(command), "Unsafe native memory allocation",
+		Dumps.registerDump(new CommandArguments(command), "unsafeAllocations", "Unsafe native memory allocation",
 				(CommandArguments args) -> printActiveAllocations(args));
 	}
 

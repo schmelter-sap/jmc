@@ -1,6 +1,6 @@
 package org.openjdk.jmc.agent.sap.boot.commands;
 
-import org.openjdk.jmc.agent.sap.boot.util.AutomaticDumps;
+import org.openjdk.jmc.agent.sap.boot.util.Dumps;
 import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
 public class UnsafeMemoryAllocationCommand {
@@ -33,6 +33,6 @@ public class UnsafeMemoryAllocationCommand {
 		// spotless:on
 
 		JdkLogging.addOptions(enableCommand);
-		AutomaticDumps.addOptions(enableCommand);
+		Dumps.addOptions(enableCommand);
 	}
 }

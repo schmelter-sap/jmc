@@ -1,17 +1,53 @@
 package org.openjdk.jmc.agent.sap.boot.util;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.function.Predicate;
 
 import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
 
-public class AutomaticDumps {
+public class Dumps {
 	public static final String DUMP_COUNT = "dumpCount";
 	public static final String DUMP_INTERVAL = "dumpInterval";
 	public static final String DUMP_DELAY = "dumpDelay";
 	public static final String EXIT_AFTER_LAST_DUMP = "exitAfterLastDump";
 
-	public static void registerDump(CommandArguments args, String name, Predicate<CommandArguments> callback) {
+	private static final HashMap<String, Predicate<CommandArguments>> registeredDumps = new HashMap<>();
+
+	public static void performDump(String arguments) throws IOException {
+		String[] parts = arguments.split(",");
+		String type = parts[0];
+
+		if (parts.length > 1) {
+			arguments = arguments.substring(type.length() + 1);
+		} else {
+			arguments = "";
+		}
+
+		CommandArguments args = new CommandArguments(arguments);
+		Predicate<CommandArguments> callback = null;
+
+		synchronized (Dumps.class) {
+			callback = registeredDumps.get(type);
+		}
+
+		if (callback == null) {
+			System.err.println("No dump registered for dumType='" + type + "'");
+			return;
+		}
+
+		callback.test(args);
+	}
+
+	public static void registerDump(
+		CommandArguments args, String type, String name, Predicate<CommandArguments> callback) {
+		synchronized (Dumps.class) {
+			if (type != null) {
+				registeredDumps.put(type, callback);
+			}
+		}
+
 		long dumpCount = args.getLong(DUMP_COUNT, 0);
 
 		if (dumpCount != 0) {

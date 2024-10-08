@@ -19,6 +19,11 @@ public class CommandArguments {
 		this.args = getOptions(optionsLine);
 	}
 
+	public CommandArguments(String optionsLine) {
+		this.command = null;
+		this.args = getOptions(optionsLine);
+	}
+
 	public CommandArguments(String line, Command command) {
 		this.command = command;
 		this.args = getOptions(line);

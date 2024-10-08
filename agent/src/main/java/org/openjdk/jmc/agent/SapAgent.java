@@ -53,6 +53,7 @@ import org.openjdk.jmc.agent.impl.DefaultTransformRegistry;
 import org.openjdk.jmc.agent.jmx.AgentManagementFactory;
 import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.Commands;
+import org.openjdk.jmc.agent.sap.boot.util.Dumps;
 import org.openjdk.jmc.agent.util.ModuleUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -67,16 +68,28 @@ public class SapAgent {
 
 	public static void premain(String agentArguments, Instrumentation instrumentation) throws Exception {
 		System.out.println("Called Agent with " + agentArguments); //$NON-NLS-1$
-		instr = instrumentation;
 		agentmain(agentArguments, instrumentation);
 	}
 
 	public static void agentmain(String agentArguments, Instrumentation instrumentation) throws Exception {
 		ModuleUtils.openUnsafePackage(instrumentation);
+		instr = instrumentation;
 
 		if (agentArguments == null || agentArguments.trim().length() == 0) {
 			initializeAgent(null, instrumentation);
 		} else {
+			if (agentArguments.equals("help")) {
+				ensureBootJarAdded();
+				Commands.printAllCommands();
+				System.exit(0);
+			}
+
+			if (agentArguments.startsWith("dump=")) {
+				ensureBootJarAdded();
+				Dumps.performDump(agentArguments.substring(5));
+				return;
+			}
+
 			try (InputStream stream = new ByteArrayInputStream(getXmlConfig(agentArguments))) {
 				initializeAgent(stream, instrumentation);
 			} catch (XMLStreamException | IOException | XMLValidationException e) {
@@ -143,12 +156,6 @@ public class SapAgent {
 	}
 
 	private static byte[] getXmlConfig(String agentArguments) throws Exception {
-		if (agentArguments.equals("help")) {
-			ensureBootJarAdded();
-			Commands.printAllCommands();
-			System.exit(0);
-		}
-
 		String[] parts = agentArguments.split("(?<!\\\\),");
 		StringBuilder configProp = new StringBuilder();
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newDefaultInstance();
