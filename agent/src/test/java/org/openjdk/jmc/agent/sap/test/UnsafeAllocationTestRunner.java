@@ -1,5 +1,6 @@
 package org.openjdk.jmc.agent.sap.test;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -12,7 +13,7 @@ public class UnsafeAllocationTestRunner {
 	private static Method freeMemoryMethod;
 	private static Object theUnsafe;
 
-	static {
+	private static void initUnsafe() {
 		try {
 			Class<?> unsafeClass = Class.forName("jdk.internal.misc.Unsafe");
 			Field theUnsafeField = unsafeClass.getDeclaredField("theUnsafe");
@@ -26,14 +27,31 @@ public class UnsafeAllocationTestRunner {
 		}
 	}
 
-	public static void main(String[] args) {
-		int increasePerAlloc = args.length > 0 ? Integer.parseInt(args[0]) : 256;
-		int maxDepth = args.length > 1 ? Integer.parseInt(args[1]) : 10;
+	public static void main(String[] args) throws IOException, InterruptedException {
+		if (args.length == 0) {
+			JavaAgentRunner runner = new JavaAgentRunner(UnsafeAllocationTestRunner.class,
+					"traceUnsafeAllocations,dumpCount=5,dumpInterval=1,minSize=2M,minStackSize=4096,"
+							+ "minPercentage=133,exitAfterLastDump=true,logDest=stdout",
+					"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
+			runner.start("runRandomAllocs");
+			Thread.sleep(5000);
+			runner.loadAgent("dump=unsafeAllocations");
+			runner.kill(true);
+		} else if ("runRandomAllocs".equals(args[0])) {
+			runRandomAllocs(args);
+		}
+	}
+
+	public static void runRandomAllocs(String[] args) {
+		initUnsafe();
+		int increasePerAlloc = args.length > 1 ? Integer.parseInt(args[1]) : 256;
+		int maxDepth = args.length > 2 ? Integer.parseInt(args[2]) : 10;
 		long addr = 0;
 		long allocSize = increasePerAlloc;
 
 		while (true) {
-			addr = doAlloc1(addr, allocSize, Math.max(2, (int) (Math.random() * maxDepth)));
+			addr = doAlloc1(addr, allocSize, Math.max(2, (int) (Math.random() * maxDepth)),
+					(long) (Math.random() * Integer.MAX_VALUE));
 			allocSize += increasePerAlloc;
 		}
 	}
@@ -47,23 +65,23 @@ public class UnsafeAllocationTestRunner {
 		return addr;
 	}
 
-	public static long doAlloc1(long addr, long allocSize, int depth) {
+	public static long doAlloc1(long addr, long allocSize, int depth, long seed) {
 		if (depth == 0) {
 			return doAllocImpl(addr, allocSize);
-		} else if (Math.random() < 0.5) {
-			return doAlloc1(addr, allocSize, depth - 1);
+		} else if ((seed & 1) == 0) {
+			return doAlloc1(addr, allocSize, depth - 1, seed / 2);
 		} else {
-			return doAlloc2(addr, allocSize, depth - 1);
+			return doAlloc2(addr, allocSize, depth - 1, seed / 2);
 		}
 	}
 
-	public static long doAlloc2(long addr, long allocSize, int depth) {
+	public static long doAlloc2(long addr, long allocSize, int depth, long seed) {
 		if (depth == 0) {
 			return doAllocImpl(addr, allocSize);
-		} else if (Math.random() < 0.5) {
-			return doAlloc1(addr, allocSize, depth - 1);
+		} else if ((seed & 1) == 0) {
+			return doAlloc1(addr, allocSize, depth - 1, seed / 2);
 		} else {
-			return doAlloc2(addr, allocSize, depth - 1);
+			return doAlloc2(addr, allocSize, depth - 1, seed / 2);
 		}
 	}
 
