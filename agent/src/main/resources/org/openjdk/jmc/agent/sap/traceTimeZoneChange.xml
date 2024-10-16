@@ -19,17 +19,17 @@
                     <parameter index="0">
                         <name>newTimeZone</name>
                         <description>The new default time zone</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger.logDefaultTimeZoneChange(Ljava/util/TimeZone;)Ljava/lang/String;</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger.logDefaultTimeZoneChange()V</converter>
                     </parameter>
                     <parameter index="0">
                         <name>newTimeZoneId</name>
                         <description>The new default time zone id</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger.logDefaultTimeZoneIdChange(Ljava/util/TimeZone;)Ljava/lang/String;</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger.logDefaultTimeZoneIdChange()V</converter>
                     </parameter>
                     <parameter index="0">
                         <name>changesDefault</name>
                         <description>Does this changes the default time zone, because it's not already the default</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger.changesDefaultTimeZone(Ljava/util/TimeZone;)Ljava/lang/String;</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger.changesDefaultTimeZone()V</converter>
                     </parameter>
                 </parameters>
             </method>

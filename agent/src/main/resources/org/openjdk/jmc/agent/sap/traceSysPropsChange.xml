@@ -19,12 +19,12 @@
                     <parameter index="0">
                         <name>key</name>
                         <description>The key</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logKey(Ljava/lang/String;)Z</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logKey()V</converter>
                     </parameter>
                     <parameter index="1">
                         <name>value</name>
                         <description>The changed value</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logValue(Ljava/lang/String;)Z</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logValue()V</converter>
                     </parameter>
                 </parameters>
             </method>
@@ -33,7 +33,7 @@
                     <name>isSystemProperties</name>
                     <expression>this</expression>
                     <description>Is this change for the System properties</description>
-                    <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logProperties(Ljava/util/Properties;)Z</converter>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logProperties()V</converter>
                 </field>
             </fields>
         </event>
@@ -51,7 +51,7 @@
                     <parameter index="0">
                         <name>key</name>
                         <description>The key</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logKey(Ljava/lang/String;)Z</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logKey()V</converter>
                     </parameter>
                 </parameters>
             </method>
@@ -60,7 +60,7 @@
                     <name>isSystemProperties</name>
                     <expression>this</expression>
                     <description>Is this change for the System properties</description>
-                    <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logProperties(Ljava/util/Properties;)Z</converter>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger.logProperties()V</converter>
                 </field>
             </fields>
         </event>

@@ -20,7 +20,7 @@
                     <parameter index="0">
                         <name>fileName</name>
                         <description>The file name</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileInputStream(Ljava/io/File;)Ljava/lang/String;</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileInputStream()V</converter>
                     </parameter>
                 </parameters>
             </method>
@@ -29,7 +29,7 @@
                     <name>hasOpened</name>
                     <expression>this</expression>
                     <description>has the file been opened</description>
-                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileInputStream(Ljava/io/FileInputStream;)Z</converter>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileInputStream(V</converter>
                 </field>
             </fields>
         </event>
@@ -50,7 +50,7 @@
                     <name>closedFile</name>
                     <expression>this</expression>
                     <description>The closed file</description>
-                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.closeFileInputStream(Ljava/io/FileInputStream;)Ljava/lang/String;</converter>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.closeFileInputStream()V</converter>
                 </field>
             </fields>
         </event>
@@ -69,12 +69,12 @@
                     <parameter index="0">
                         <name>fileName</name>
                         <description>The file name</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileOutputStream(Ljava/io/File;)Ljava/lang/String;</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileOutputStream()V</converter>
                     </parameter>
                     <parameter index="1">
                         <name>append</name>
                         <description>The append flag</description>
-                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileOutputStream(Z)Z</converter>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileOutputStream()V</converter>
                     </parameter>
                 </parameters>
             </method>
@@ -83,7 +83,7 @@
                     <name>hasOpened</name>
                     <expression>this</expression>
                     <description>has the file been opened</description>
-                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileOutputStream(Ljava/io/FileOutputStream;)Z</converter>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileOutputStream()V</converter>
                 </field>
             </fields>
         </event>
@@ -104,7 +104,7 @@
                     <name>closedFile</name>
                     <expression>this</expression>
                     <description>The closed file</description>
-                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.closeFileOutputStream(Ljava/io/FileOutputStream;)Ljava/lang/String;</converter>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.closeFileOutputStream()V</converter>
                 </field>
             </fields>
         </event>
