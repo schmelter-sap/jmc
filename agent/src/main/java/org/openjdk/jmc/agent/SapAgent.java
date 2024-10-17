@@ -53,6 +53,7 @@ import org.openjdk.jmc.agent.impl.DefaultTransformRegistry;
 import org.openjdk.jmc.agent.jmx.AgentManagementFactory;
 import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.Commands;
+import org.openjdk.jmc.agent.sap.boot.converters.GenericLogger;
 import org.openjdk.jmc.agent.sap.boot.util.Dumps;
 import org.openjdk.jmc.agent.util.ModuleUtils;
 import org.w3c.dom.Document;
@@ -175,6 +176,10 @@ public class SapAgent {
 		for (String part : parts) {
 			if (part.equals("help")) {
 				configProp.append(part).append(',');
+			} else if (part.startsWith(GenericLogger.GENERIC_COMMAND_PREFIX)) {
+				// Do nothing, just pick up the options and make sure the converter is accessible.
+				configProp = addCommandOptions(configName, configProp);
+				ensureBootJarAdded();
 			} else if (part.indexOf('=') > 0) {
 				configProp.append(part).append(',');
 			} else {
