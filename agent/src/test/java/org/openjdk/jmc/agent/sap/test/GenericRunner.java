@@ -1,7 +1,6 @@
 package org.openjdk.jmc.agent.sap.test;
 
 import java.util.Date;
-import java.util.Formatter;
 
 //You can run it via (if the cwd is the agent directory):
 // java -javaagent:target/agent-1.0.1-SNAPSHOT.jar=target/test-classes/org/openjdk/jmc/agent/test/sap/generic.xml -cp target/test-classes org.openjdk.jmc.agent.sap.test.GenericRunner
