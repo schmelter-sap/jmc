@@ -6,8 +6,8 @@
     </config>
     <events>
         <event id="jdk.log.generic1">
-            <label>localeChanged</label>
-            <description>Change of the default locale</description>
+            <label>generic1</label>
+            <description>generic</description>
             <class>org.openjdk.jmc.agent.sap.test.GenericRunner</class>
             <stacktrace>true</stacktrace>
             <rethrow>false</rethrow>
@@ -45,6 +45,84 @@
                         <name>v6</name>
                         <description>v6</description>
                         <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logLastFormat1()V</converter>
+                    </parameter>
+                </parameters>
+            </method>
+        </event>
+        <event id="jdk.log.generic2">
+            <label>generic2</label>
+            <description>generic</description>
+            <class>org.openjdk.jmc.agent.sap.test.GenericRunner</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <path>jdk/test/generic</path>
+            <method>
+                <name>log2</name>
+                <descriptor>(SDLjava/lang/String;Ljava/lang/Integer;F)I</descriptor>
+                <parameters>
+                    <parameter index="0">
+                        <name>v1</name>
+                        <description>v1</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logFormat2()V</converter>
+                    </parameter>
+                    <parameter index="1">
+                        <name>v2</name>
+                        <description>v2</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logFormat2()V</converter>
+                    </parameter>
+                    <parameter index="2">
+                        <name>v3</name>
+                        <description>v3</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logFormat2()V</converter>
+                    </parameter>
+                    <parameter index="3">
+                        <name>v4</name>
+                        <description>v4</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logFormat2()V</converter>
+                    </parameter>
+                    <parameter index="4">
+                        <name>v5</name>
+                        <description>v5</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logLastFormat2()V</converter>
+                    </parameter>
+                </parameters>
+            </method>
+        </event>
+        <event id="jdk.log.generic3">
+            <label>generic3</label>
+            <description>generic</description>
+            <class>org.openjdk.jmc.agent.sap.test.GenericRunner</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <path>jdk/test/generic</path>
+            <method>
+                <name>log3</name>
+                <descriptor>(CLjava/lang/Integer;Ljava/lang/Double;Ljava/lang/Short;Ljava/lang/Boolean;)D</descriptor>
+                <parameters>
+                    <parameter index="0">
+                        <name>v1</name>
+                        <description>v1</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logFormat3()V</converter>
+                    </parameter>
+                    <parameter index="1">
+                        <name>v2</name>
+                        <description>v2</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logFormat3()V</converter>
+                    </parameter>
+                    <parameter index="2">
+                        <name>v3</name>
+                        <description>v3</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logFormat3()V</converter>
+                    </parameter>
+                    <parameter index="3">
+                        <name>v4</name>
+                        <description>v4</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logFormat3()V</converter>
+                    </parameter>
+                    <parameter index="4">
+                        <name>v5</name>
+                        <description>v5</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.GenericLogger.logLastFormat3()V</converter>
                     </parameter>
                 </parameters>
             </method>

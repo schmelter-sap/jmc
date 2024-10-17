@@ -1,7 +1,6 @@
 package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.util.ArrayList;
-import java.util.Formatter;
 
 import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
@@ -77,9 +76,7 @@ public class GenericLogger {
 				}
 			}
 
-			try (Formatter formatter = new Formatter(JdkLogging.getStream(args))) {
-				formatter.format(format, values);
-			}
+			JdkLogging.getFormatter(args).format(format + "\n", values);
 		}
 	}
 

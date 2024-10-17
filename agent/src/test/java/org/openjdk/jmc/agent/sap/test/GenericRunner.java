@@ -1,6 +1,7 @@
 package org.openjdk.jmc.agent.sap.test;
 
 import java.util.Date;
+import java.util.Formatter;
 
 //You can run it via (if the cwd is the agent directory):
 // java -javaagent:target/agent-1.0.1-SNAPSHOT.jar=target/test-classes/org/openjdk/jmc/agent/test/sap/generic.xml -cp target/test-classes org.openjdk.jmc.agent.sap.test.GenericRunner
@@ -10,10 +11,10 @@ public class GenericRunner {
 	public static long l1 = Long.MAX_VALUE;
 
 	public static void main(String[] args) {
-		log1(false, (byte) 2, 17, 0.2f, "TestMe", new Date());
+		log1(false, (byte) 2, 17, 0.2f, "TestMe", new Date(0));
 		log2((short) 7, 0.3, "Yeah", 17, 0.3f);
 		log3('A', -1, 0.1, (short) -1, true);
-		log4(false, (byte) 2, 17, -0.2f, "TestMe", new Date());
+		log4(false, (byte) 2, 17, -0.2f, "TestMe", new Date(1));
 		log5((short) 7, 0.3, "Yeah", 17, -0.3f);
 	}
 

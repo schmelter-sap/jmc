@@ -29,7 +29,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.Formatter;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 
 import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
@@ -37,6 +39,7 @@ import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
 public class JdkLogging {
 	public static final String LOG_DEST = "logDest";
 	private static HashMap<String, PrintStream> outputs = new HashMap<>();
+	private static IdentityHashMap<PrintStream, Formatter> formatters = new IdentityHashMap<>();
 
 	public static void addOptions(Command command) {
 		command.addOption(LOG_DEST,
@@ -46,6 +49,22 @@ public class JdkLogging {
 
 	public static boolean doesOutput(CommandArguments args) {
 		return !"none".equals(args.getString(LOG_DEST, "stderr"));
+	}
+
+	public static Formatter getFormatter(CommandArguments args) {
+		PrintStream stream = getStream(args);
+		Formatter formatter;
+
+		synchronized (formatters) {
+			formatter = formatters.get(stream);
+
+			if (formatter == null) {
+				formatter = new Formatter(stream);
+				formatters.put(stream, formatter);
+			}
+		}
+
+		return formatter;
 	}
 
 	public static PrintStream getStream(CommandArguments args) {
