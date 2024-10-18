@@ -50,6 +50,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.openjdk.jmc.agent.impl.DefaultTransformRegistry;
+import org.openjdk.jmc.agent.jfr.JFRTransformDescriptor;
 import org.openjdk.jmc.agent.jmx.AgentManagementFactory;
 import org.openjdk.jmc.agent.sap.boot.commands.Command;
 import org.openjdk.jmc.agent.sap.boot.commands.Commands;
@@ -63,6 +64,7 @@ import org.w3c.dom.NodeList;
 public class SapAgent {
 
 	private static final String CONFIGS_PATH = "org/openjdk/jmc/agent/sap/";
+	private static final String CONVERTERS_PREFIX = "org.openjdk.jmc.agent.sap.boot.converters.";
 	private static Logger logger = Logger.getLogger(SapAgent.class.getName());
 	private static Instrumentation instr;
 	private static boolean addedBootJar = false;
@@ -99,6 +101,35 @@ public class SapAgent {
 		}
 	}
 
+	private static void addBootJarIfNeeded(TransformRegistry registry) throws IOException {
+		// Check if we need converters from the boot jar.
+		boolean needsBootJar = false;
+
+		outer: for (String className : registry.getClassNames()) {
+			for (TransformDescriptor descriptor : registry.getTransformData(className)) {
+				JFRTransformDescriptor impl = (JFRTransformDescriptor) descriptor;
+
+				for (Field field : impl.getFields()) {
+					if (field.hasConverter() && field.getConverterDefinition().startsWith(CONVERTERS_PREFIX)) {
+						needsBootJar = true;
+						break outer;
+					}
+				}
+
+				for (Parameter param : impl.getParameters()) {
+					if (param.hasConverter() && param.getConverterDefinition().startsWith(CONVERTERS_PREFIX)) {
+						needsBootJar = true;
+						break outer;
+					}
+				}
+			}
+		}
+
+		if (needsBootJar) {
+			ensureBootJarAdded();
+		}
+	}
+
 	private static void ensureBootJarAdded() throws IOException {
 		if (addedBootJar) {
 			return;
@@ -129,8 +160,6 @@ public class SapAgent {
 		try {
 			return new FileInputStream(config);
 		} catch (FileNotFoundException e) {
-			ensureBootJarAdded();
-
 			ClassLoader cl = SapAgent.class.getClassLoader();
 			InputStream is = cl.getResourceAsStream(CONFIGS_PATH + config + ".xml");
 
@@ -179,7 +208,6 @@ public class SapAgent {
 			} else if (part.startsWith(GenericLogger.GENERIC_COMMAND_PREFIX)) {
 				// Do nothing, just pick up the options and make sure the converter is accessible.
 				configProp = addCommandOptions(configName, configProp);
-				ensureBootJarAdded();
 			} else if (part.indexOf('=') > 0) {
 				configProp.append(part).append(',');
 			} else {
@@ -258,9 +286,10 @@ public class SapAgent {
 	}
 
 	public static void initializeAgent(InputStream configuration, Instrumentation instrumentation)
-			throws XMLStreamException, XMLValidationException {
+			throws XMLStreamException, XMLValidationException, IOException {
 		TransformRegistry registry = configuration != null ? DefaultTransformRegistry.from(configuration)
 				: DefaultTransformRegistry.empty();
+		addBootJarIfNeeded(registry);
 		instrumentation.addTransformer(new SapTransformer(registry), true);
 		AgentManagementFactory.createAndRegisterAgentControllerMBean(instrumentation,
 				new SapTransformRegistry(registry));
