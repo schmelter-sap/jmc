@@ -14,13 +14,13 @@ public class GenericLogger {
 	private static final ArrayList<ArrayList<ThreadLocal<Object>>> locals = new ArrayList<>();
 	private static final int[] parameterIndices = new int[MAX_FORMATS];
 	private static final String[] formats = new String[MAX_FORMATS];
-	private static final Command[] commands = new Command[MAX_FORMATS];
+	public static final Command[] commands = new Command[MAX_FORMATS];
 
 	static {
 		for (int i = 0; i < MAX_FORMATS; ++i) {
-			commands[i] = new Command(GENERIC_COMMAND_PREFIX + (i + 1), "Generic logging", FORMAT,
-					"The format to use for logging.");
-			JdkLogging.addOptions(commands[i]);
+			commands[i] = new Command(GENERIC_COMMAND_PREFIX + (i + 1), "Generic logging format " + (i + 1), FORMAT,
+					"Used to specify the output of the generic logging format " + (i + 1) + ".");
+			JdkLogging.addOptionsWithStack(commands[i]);
 		}
 	}
 
@@ -76,7 +76,7 @@ public class GenericLogger {
 				}
 			}
 
-			JdkLogging.getFormatter(args).format(format + "\n", values);
+			JdkLogging.logWithFormat(args, format + "\n", values);
 		}
 	}
 

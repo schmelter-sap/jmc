@@ -3,6 +3,7 @@ package org.openjdk.jmc.agent.sap.boot.commands;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
+import org.openjdk.jmc.agent.sap.boot.converters.GenericLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.LocaleChangeLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.TimeZoneChangeLogger;
@@ -11,7 +12,8 @@ import org.openjdk.jmc.agent.sap.boot.converters.UnsafeMemoryAllocationLogger;
 public class Commands {
 
 	public static final Command[] commands = new Command[] {LocaleChangeLogger.command, SystemPropChangeLogger.command,
-			TimeZoneChangeLogger.command, UnsafeMemoryAllocationLogger.command};
+			TimeZoneChangeLogger.command, UnsafeMemoryAllocationLogger.command, GenericLogger.commands[0],
+			GenericLogger.commands[1], GenericLogger.commands[2]};
 
 	public static void printAllCommands() {
 		System.out.println("The following commands are suppored:");

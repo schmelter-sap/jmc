@@ -171,15 +171,16 @@ public class SapAgent {
 		}
 	}
 
-	private static StringBuilder addCommandOptions(String commandName, StringBuilder options) {
-		if (addedBootJar) {
-			// If the boot jar was not yet added, we cannot have encountered a supported command.
+	private static StringBuilder addCommandOptions(String commandName, StringBuilder options) throws IOException {
+		if (options.length() > 0) {
+			ensureBootJarAdded();
 			Command command = Commands.getCommand(commandName);
 
 			if (command != null) {
 				command.preTraceInit();
-				System.setProperty("com.sap.jvm.jmcagent.options." + commandName, options.toString());
 			}
+
+			System.setProperty("com.sap.jvm.jmcagent.options." + commandName, options.toString());
 		}
 
 		return new StringBuilder();
@@ -208,6 +209,7 @@ public class SapAgent {
 			} else if (part.startsWith(GenericLogger.GENERIC_COMMAND_PREFIX)) {
 				// Do nothing, just pick up the options and make sure the converter is accessible.
 				configProp = addCommandOptions(configName, configProp);
+				configName = part;
 			} else if (part.indexOf('=') > 0) {
 				configProp.append(part).append(',');
 			} else {

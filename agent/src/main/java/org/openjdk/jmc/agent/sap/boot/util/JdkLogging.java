@@ -38,6 +38,7 @@ import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
 
 public class JdkLogging {
 	public static final String LOG_DEST = "logDest";
+	public static final String LOG_WITH_STACK = "logWithStack";
 	private static HashMap<String, PrintStream> outputs = new HashMap<>();
 	private static IdentityHashMap<PrintStream, Formatter> formatters = new IdentityHashMap<>();
 
@@ -45,6 +46,12 @@ public class JdkLogging {
 		command.addOption(LOG_DEST,
 				"Specified where the output shows up. Can be 'stdout', 'stderr', 'none' or a file name. "
 						+ "Prepend the filename with a '+' to append to the file intead of overwriting it.");
+		command.addOption(LOG_WITH_STACK, "Print a stack trace for every log output.");
+	}
+
+	public static void addOptionsWithStack(Command command) {
+		addOptions(command);
+		command.addOption(LOG_WITH_STACK, "Print a stack trace for every log output.");
 	}
 
 	public static boolean doesOutput(CommandArguments args) {
@@ -126,16 +133,32 @@ public class JdkLogging {
 	public static void log(CommandArguments args, String msg) {
 		PrintStream stream = getStream(args);
 		stream.println(msg);
+
+		if (args.getBoolean(LOG_WITH_STACK, false)) {
+			logStack(stream);
+		}
 	}
 
-	public static void logWithStack(CommandArguments args, String msg) {
-		PrintStream stream = getStream(args);
-		stream.println(msg);
+	public static void logWithFormat(CommandArguments args, String format, Object[] values) {
+		Formatter formatter = getFormatter(args);
+		formatter.format(format + "\n", values);
 
+		if (args.getBoolean(LOG_WITH_STACK, false)) {
+			logStack(getStream(args));
+		}
+	}
+
+	private static void logStack(PrintStream stream) {
 		StackTraceElement[] frames = new Exception().getStackTrace();
 
 		for (int i = 3; i < frames.length; ++i) {
 			stream.println("\t" + frames[i]);
 		}
+	}
+
+	public static void logWithStack(CommandArguments args, String msg) {
+		PrintStream stream = getStream(args);
+		stream.println(msg);
+		logStack(stream);
 	}
 }
