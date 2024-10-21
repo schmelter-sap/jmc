@@ -19,6 +19,8 @@ public class JavaAgentRunner {
 	private Thread stderrWorker;
 	private Process process;
 	private String commandLine;
+	private static boolean dumpOnExit;
+	private static int debugPort = -1;
 
 	private static final String AGENT_NAME = "agent-1.0.1-SNAPSHOT.jar";
 
@@ -81,6 +83,11 @@ public class JavaAgentRunner {
 			args.add(vmArg);
 		}
 
+		if (debugPort >= 0) {
+			args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=" + debugPort);
+			System.out.println("Waiting for debugger on port " + debugPort + ".");
+		}
+
 		args.add(classToRun);
 
 		for (String javaArg : javaArgs) {
@@ -98,11 +105,11 @@ public class JavaAgentRunner {
 		stderrWorker.start();
 	}
 
-	public void waitForStdout(StringBuilder output, String tag) {
+	public void waitForStdout(String tag) {
 		waitFor(stdout, tag);
 	}
 
-	public void waitForStderr(StringBuilder output, String tag) {
+	public void waitForStderr(String tag) {
 		waitFor(stderr, tag);
 	}
 
@@ -132,7 +139,7 @@ public class JavaAgentRunner {
 				int result = p.waitFor();
 
 				if (result != 0) {
-					kill(true);
+					kill();
 					throw new RuntimeException(pb.command().toString() + " return with exit code " + result);
 				}
 
@@ -146,7 +153,11 @@ public class JavaAgentRunner {
 	public int waitForEnd() {
 		while (true) {
 			try {
-				return process.waitFor();
+				int result = process.waitFor();
+
+				if (result != 0) {
+					dumpOnExit();
+				}
 			} catch (InterruptedException e) {
 				// Retry
 			}
@@ -190,7 +201,26 @@ public class JavaAgentRunner {
 		System.out.println(raw);
 	}
 
-	public void kill(boolean dumpOutput) {
+	public static void setDumpOnExit(boolean dumpOnExit) {
+		JavaAgentRunner.dumpOnExit = dumpOnExit;
+	}
+
+	public static void setDebugPort(int port) {
+		debugPort = port;
+	}
+
+	private void dumpOnExit() {
+		if (dumpOnExit) {
+			waitForOutput();
+			System.out.println("Command line: " + commandLine);
+			System.out.println("Output on stdout:");
+			dumpLines(stdout);
+			System.out.println("Output on stderr:");
+			dumpLines(stderr);
+		}
+	}
+
+	public void kill() {
 		int result = 0;
 
 		try {
@@ -205,26 +235,23 @@ public class JavaAgentRunner {
 			// Ignore.
 		}
 
-		if (dumpOutput && (result != 0)) {
-			waitForOutput();
-			System.out.println("Command line: " + commandLine);
-			System.out.println("Output on stdout:");
-			dumpLines(stdout);
-			System.out.println("Output on stderr:");
-			dumpLines(stderr);
+		if (result != 0) {
+			dumpOnExit();
 		}
 	}
 
 	private static void waitFor(StringBuilder output, String tag) {
-		synchronized (output) {
-			if (output.indexOf(tag) >= 0) {
-				return;
-			}
+		while (true) {
+			synchronized (output) {
+				if (output.indexOf(tag) >= 0) {
+					return;
+				}
 
-			try {
-				output.wait();
-			} catch (InterruptedException e) {
-				// Ignore.
+				try {
+					output.wait();
+				} catch (InterruptedException e) {
+					// Ignore.
+				}
 			}
 		}
 	}

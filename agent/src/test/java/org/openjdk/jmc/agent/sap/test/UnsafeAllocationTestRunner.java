@@ -34,9 +34,9 @@ public class UnsafeAllocationTestRunner {
 					"traceUnsafeAllocations,dumpCount=1,dumpInterval=3s,logDest=stdout", "--add-opens",
 					"java.base/jdk.internal.misc=ALL-UNNAMED");
 			runner.start(DO_ALLOCS);
-			Thread.sleep(10000);
+			runner.waitForStdout("Printed ");
 			runner.loadAgent("dump=unsafeAllocations,logDest=stderr,maxFrames=8");
-			runner.kill(true);
+			runner.kill();
 		} else if (DO_ALLOCS.equals(args[0])) {
 			runRandomAllocs(args);
 		}
