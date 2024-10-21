@@ -12,6 +12,7 @@ public class UnsafeAllocationTestRunner {
 	private static Method reallocateMemoryMethod;
 	private static Method freeMemoryMethod;
 	private static Object theUnsafe;
+	private static String DO_ALLOCS = "runRandomAllocs";
 
 	private static void initUnsafe() {
 		try {
@@ -30,14 +31,13 @@ public class UnsafeAllocationTestRunner {
 	public static void main(String[] args) throws IOException, InterruptedException {
 		if (args.length == 0) {
 			JavaAgentRunner runner = new JavaAgentRunner(UnsafeAllocationTestRunner.class,
-					"traceUnsafeAllocations,dumpCount=5,dumpInterval=1,minSize=2M,minStackSize=4096,"
-							+ "minPercentage=133,exitAfterLastDump=true,logDest=stdout",
-					"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
-			runner.start("runRandomAllocs");
-			Thread.sleep(5000);
-			runner.loadAgent("dump=unsafeAllocations");
+					"traceUnsafeAllocations,dumpCount=1,dumpInterval=3s,logDest=stdout", "--add-opens",
+					"java.base/jdk.internal.misc=ALL-UNNAMED");
+			runner.start(DO_ALLOCS);
+			Thread.sleep(10000);
+			runner.loadAgent("dump=unsafeAllocations,logDest=stderr,maxFrames=8");
 			runner.kill(true);
-		} else if ("runRandomAllocs".equals(args[0])) {
+		} else if (DO_ALLOCS.equals(args[0])) {
 			runRandomAllocs(args);
 		}
 	}

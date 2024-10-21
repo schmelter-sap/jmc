@@ -20,7 +20,9 @@ public class Dumps {
 			System.out.println("The following dumps are supported:");
 
 			for (Command cmd : registeredDumps.keySet()) {
-				System.out.println(cmd.getName() + ": " + cmd.getDescription());
+				if (registeredDumps.get(cmd) != null) {
+					System.out.println(cmd.getName() + ": " + cmd.getDescription());
+				}
 			}
 
 			System.out.println("Use dump=help:<dump> for all options for a specific dump.");
