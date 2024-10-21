@@ -68,6 +68,7 @@ public class SapAgent {
 	private static Logger logger = Logger.getLogger(SapAgent.class.getName());
 	private static Instrumentation instr;
 	private static boolean addedBootJar = false;
+	private static ArrayList<String> seenCommands = new ArrayList<>();
 
 	public static void premain(String agentArguments, Instrumentation instrumentation) throws Exception {
 		System.out.println("Called Agent with " + agentArguments); //$NON-NLS-1$
@@ -171,16 +172,27 @@ public class SapAgent {
 		}
 	}
 
-	private static StringBuilder addCommandOptions(String commandName, StringBuilder options) throws IOException {
-		if (options.length() > 0) {
+	private static void preInitCommands() throws IOException {
+		if (seenCommands.size() > 0) {
 			ensureBootJarAdded();
+		}
+
+		for (String commandName : seenCommands) {
 			Command command = Commands.getCommand(commandName);
 
 			if (command != null) {
 				command.preTraceInit();
 			}
+		}
+	}
 
-			System.setProperty("com.sap.jvm.jmcagent.options." + commandName, options.toString());
+	private static StringBuilder addCommandOptions(String commandName, StringBuilder options) {
+		if (commandName != null) {
+			if (options.length() > 0) {
+				System.setProperty("com.sap.jvm.jmcagent.options." + commandName, options.toString());
+			}
+
+			seenCommands.add(commandName);
 		}
 
 		return new StringBuilder();
@@ -213,9 +225,16 @@ public class SapAgent {
 			} else if (part.indexOf('=') > 0) {
 				configProp.append(part).append(',');
 			} else {
-				Document doc = factory.newDocumentBuilder().parse(getStreamForConfig(part));
+				InputStream is = getStreamForConfig(part);
+				Document doc = factory.newDocumentBuilder().parse(is);
 				configProp = addCommandOptions(configName, configProp);
-				configName = part;
+
+				if (is instanceof FileInputStream) {
+					// No configuration for direct XML file.
+					configName = null;
+				} else {
+					configName = part;
+				}
 
 				if (getBool(doc, "allowtostring", false)) { //$NON-NLS-1$
 					setText(base, "allowtostring", "true"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -245,6 +264,7 @@ public class SapAgent {
 		}
 
 		addCommandOptions(configName, configProp);
+		preInitCommands();
 
 		// If we added our boot jar, check the options now.
 		if (addedBootJar) {
