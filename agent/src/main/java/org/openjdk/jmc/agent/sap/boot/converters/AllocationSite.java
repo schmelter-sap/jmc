@@ -30,14 +30,14 @@ public class AllocationSite {
 		}
 
 		StackTraceElement[] frames = stack.getStackTrace();
-		int framesToSkip = 2;
+		int framesToSkip = 3;
 		int maxFrames = Math.min(filter.maxFrames + framesToSkip, frames.length);
 
 		if (filter.mustContain != null) {
 			boolean matchFound = false;
 
 			for (int i = framesToSkip; i < maxFrames; ++i) {
-				if (filter.mustContain.matcher(frames[i].toString()).matches()) {
+				if (filter.mustContain.matcher(frames[i].toString()).find()) {
 					matchFound = true;
 
 					break;
@@ -51,7 +51,7 @@ public class AllocationSite {
 
 		if (filter.mustNotContain != null) {
 			for (int i = framesToSkip; i < maxFrames; ++i) {
-				if (filter.mustNotContain.matcher(frames[i].toString()).matches()) {
+				if (filter.mustNotContain.matcher(frames[i].toString()).find()) {
 					return false;
 				}
 			}

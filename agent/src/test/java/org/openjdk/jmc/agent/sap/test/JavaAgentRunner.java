@@ -73,6 +73,8 @@ public class JavaAgentRunner {
 	}
 
 	public void start(String ... javaArgs) throws IOException {
+		stdout.setLength(0);
+		stderr.setLength(0);
 		ArrayList<String> args = new ArrayList<>();
 		args.add(getExe("java"));
 		args.add("-javaagent:" + getAgent() + "=" + options);

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class TestRunner {
-	private static TestConfig[] testConfigs = new TestConfig[] {new TestConfig(UnsafeAllocationTestRunner.class)};
+	private static TestConfig[] testConfigs = new TestConfig[] {new TestConfig(UnsafeAllocationTest.class)};
 
 	public static void main(String[] args) throws Exception {
 		ArrayList<String> leftArgs = new ArrayList<>(Arrays.asList(args));
