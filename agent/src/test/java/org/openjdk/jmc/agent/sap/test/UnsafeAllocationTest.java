@@ -16,7 +16,7 @@ public class UnsafeAllocationTest extends TestBase {
 	private static String DO_NATIVE_ALLOCS = "doNativeAllocs";
 	private static String DO_DELAYED_ALLOCS = "doDelayedAllocs";
 	private static String DONE = "DONE";
-	private static long DELAY = 5;
+	private static long DELAY = 10;
 
 	private static void initUnsafe() {
 		try {
@@ -41,6 +41,7 @@ public class UnsafeAllocationTest extends TestBase {
 			}
 
 			testDelayedDumping();
+			testAgeFiltering();
 		} else if (DO_ALLOCS.equals(args[0])) {
 			runRandomAllocs(args);
 		} else if (DO_NATIVE_ALLOCS.equals(args[0])) {
@@ -159,20 +160,36 @@ public class UnsafeAllocationTest extends TestBase {
 		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 4 of 4 allocations with 38797312 bytes");
 	}
 
+	public static void testAgeFiltering() throws IOException {
+		JavaAgentRunner runner = new JavaAgentRunner(UnsafeAllocationTest.class,
+				"traceUnsafeAllocations,logDest=stdout", "--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
+		runner.start(DO_DELAYED_ALLOCS);
+		runner.waitForStdout(DONE);
+		runner.loadAgent("dump=unsafeAllocations,maxAge=27s,minAge=13s");
+		runner.kill();
+		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 1 of 4 allocations with 9437184 bytes");
+		runner.start(DO_DELAYED_ALLOCS);
+		runner.waitForStdout(DONE);
+		runner.loadAgent("dump=unsafeAllocations,minAge=13s");
+		runner.kill();
+		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 3 of 4 allocations with 17825792");
+		runner.start(DO_DELAYED_ALLOCS);
+		runner.waitForStdout(DONE);
+		runner.loadAgent("dump=unsafeAllocations,maxAge=27s");
+		runner.kill();
+		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 2 of 4 allocations with 30408704 bytes");
+	}
+
 	public static void doDelayedAllocs() throws InterruptedException {
 		initUnsafe();
-		long a0 = allocateMemory(1 * 1024 * 1024);
+		allocateMemory(1 * 1024 * 1024);
 		sleep(DELAY);
-		long a1 = allocateMemory(7 * 1024 * 1024);
+		allocateMemory(7 * 1024 * 1024);
 		sleep(DELAY);
-		long a2 = allocateMemory(9 * 1024 * 1024);
+		allocateMemory(9 * 1024 * 1024);
 		sleep(DELAY);
-		long a3 = allocateMemory(20 * 1024 * 1024);
+		allocateMemory(20 * 1024 * 1024);
 		sleep(DELAY);
-		freeMemory(a0);
-		freeMemory(a1);
-		freeMemory(a2);
-		freeMemory(a3);
 		done();
 	}
 
