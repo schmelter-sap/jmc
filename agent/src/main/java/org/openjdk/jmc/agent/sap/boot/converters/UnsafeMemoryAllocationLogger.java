@@ -15,9 +15,10 @@ public class UnsafeMemoryAllocationLogger {
 	public static final Command command = UnsafeMemoryAllocationCommand.enableCommand;
 
 	static {
-		Dumps.registerDump(UnsafeMemoryAllocationCommand.dumpCommand, "Unsafe native memory allocation",
+		Dumps.registerDump(UnsafeMemoryAllocationCommand.dumpCommand, null,
 				(CommandArguments args) -> printActiveAllocations(args));
-		Dumps.registerDump(command, null, (CommandArguments args) -> printActiveAllocations(args));
+		Dumps.registerDump(command, "Unsafe native memory allocation",
+				(CommandArguments args) -> printActiveAllocations(args));
 	}
 
 	public static long logSize(long size) {

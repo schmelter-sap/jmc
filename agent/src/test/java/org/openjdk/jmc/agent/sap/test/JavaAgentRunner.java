@@ -21,6 +21,7 @@ public class JavaAgentRunner {
 	private String commandLine;
 	private static boolean dumpOnExit;
 	private static int debugPort = -1;
+	private static int MAX_WAIT_TIME = 60;
 
 	private static final String AGENT_NAME = "agent-1.0.1-SNAPSHOT.jar";
 
@@ -142,6 +143,7 @@ public class JavaAgentRunner {
 
 				if (result != 0) {
 					kill();
+					dumpOnExit();
 					throw new RuntimeException(pb.command().toString() + " return with exit code " + result);
 				}
 
@@ -153,13 +155,27 @@ public class JavaAgentRunner {
 	}
 
 	public int waitForEnd() {
+		long t1 = System.currentTimeMillis();
+
 		while (true) {
 			try {
-				int result = process.waitFor();
+				boolean exited = process.waitFor(5, TimeUnit.SECONDS);
+
+				if (!exited && !checkWaitTimeout(t1)) {
+					throw new RuntimeException("Waited over one minute for the process to end.");
+				}
+
+				if (!exited) {
+					continue;
+				}
+
+				int result = process.exitValue();
 
 				if (result != 0) {
 					dumpOnExit();
 				}
+
+				return result;
 			} catch (InterruptedException e) {
 				// Retry
 			}
@@ -242,15 +258,34 @@ public class JavaAgentRunner {
 		}
 	}
 
-	private static void waitFor(StringBuilder output, String tag) {
+	private boolean checkWaitTimeout(long t1) {
+		long elapsed = (System.currentTimeMillis() - t1) / 1000;
+
+		// We should never wait this long.
+		if (elapsed > MAX_WAIT_TIME) {
+			kill();
+
+			return false;
+		}
+
+		return true;
+	}
+
+	private void waitFor(StringBuilder output, String tag) {
+		long t1 = System.currentTimeMillis();
+
 		while (true) {
 			synchronized (output) {
 				if (output.indexOf(tag) >= 0) {
 					return;
 				}
 
+				if (!checkWaitTimeout(t1)) {
+					throw new RuntimeException("Waited over one minute for '" + tag + "'");
+				}
+
 				try {
-					output.wait();
+					output.wait(10000);
 				} catch (InterruptedException e) {
 					// Ignore.
 				}

@@ -14,7 +14,9 @@ public class UnsafeAllocationTest extends TestBase {
 	private static Object theUnsafe;
 	private static String DO_ALLOCS = "runRandomAllocs";
 	private static String DO_NATIVE_ALLOCS = "doNativeAllocs";
+	private static String DO_DELAYED_ALLOCS = "doDelayedAllocs";
 	private static String DONE = "DONE";
+	private static long DELAY = 5;
 
 	private static void initUnsafe() {
 		try {
@@ -33,10 +35,18 @@ public class UnsafeAllocationTest extends TestBase {
 	public static void main(String[] args) throws IOException, InterruptedException {
 		if (args.length == 0) {
 			testNativeAllocs();
+
+			if (smokeTestsOnly()) {
+				return;
+			}
+
+			testDelayedDumping();
 		} else if (DO_ALLOCS.equals(args[0])) {
 			runRandomAllocs(args);
 		} else if (DO_NATIVE_ALLOCS.equals(args[0])) {
 			doNativeAllocs();
+		} else if (DO_DELAYED_ALLOCS.equals(args[0])) {
+			doDelayedAllocs();
 		} else {
 			throw new RuntimeException("Unknown test '" + args[0] + "'");
 		}
@@ -120,6 +130,49 @@ public class UnsafeAllocationTest extends TestBase {
 		long a2 = allocateMemory(128);
 		freeMemory(a2);
 		a2 = allocateMemory(750);
+		done();
+	}
+
+	public static void testDelayedDumping() throws IOException {
+		JavaAgentRunner runner = new JavaAgentRunner(UnsafeAllocationTest.class,
+				"traceUnsafeAllocations,dumpCount=2,minSize=7M,dumpInterval=1s,"
+						+ "minPercentage=300,logDest=stdout,exitAfterLastDump=true",
+				"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
+		runner.start(DO_DELAYED_ALLOCS);
+		runner.waitForStdout("Printed 2 of 2 allocations"); // Should be the last dump we see.
+		runner.waitForEnd();
+		assertLinesNotContainsRegExp(runner.getStdoutLines(), "Printed 1 of 1 allocations");
+		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 2 of 2 allocations with 8388608 bytes");
+		assertLinesNotContainsRegExp(runner.getStdoutLines(), "Printed 3 of 3 allocations");
+		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 4 of 4 allocations with 38797312 bytes");
+		assertLinesNotContainsRegExp(runner.getStdoutLines(), DONE);
+		runner = new JavaAgentRunner(UnsafeAllocationTest.class,
+				"traceUnsafeAllocations,dumpCount=4,minSize=1M,dumpInterval=1s,"
+						+ "minPercentage=101,logDest=stdout,exitAfterLastDump=false",
+				"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
+		runner.start(DO_DELAYED_ALLOCS);
+		runner.waitForStdout(DONE);
+		runner.kill();
+		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 1 of 1 allocations with 1048576 bytes");
+		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 2 of 2 allocations with 8388608 bytes");
+		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 3 of 3 allocations with 17825792 bytes");
+		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 4 of 4 allocations with 38797312 bytes");
+	}
+
+	public static void doDelayedAllocs() throws InterruptedException {
+		initUnsafe();
+		long a0 = allocateMemory(1 * 1024 * 1024);
+		sleep(DELAY);
+		long a1 = allocateMemory(7 * 1024 * 1024);
+		sleep(DELAY);
+		long a2 = allocateMemory(9 * 1024 * 1024);
+		sleep(DELAY);
+		long a3 = allocateMemory(20 * 1024 * 1024);
+		sleep(DELAY);
+		freeMemory(a0);
+		freeMemory(a1);
+		freeMemory(a2);
+		freeMemory(a3);
 		done();
 	}
 
