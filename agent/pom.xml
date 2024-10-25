@@ -174,6 +174,7 @@
 				<configuration>
 					<argLine>--add-opens java.base/jdk.internal.misc=ALL-UNNAMED -XX:+FlightRecorder</argLine>
 					<excludes>
+						<exclude>SapIntegrationTest.java</exclude>
 						<exclude>TestDefineEventProbes.java</exclude>
 						<exclude>TestCustomClassloader.java</exclude>
 						<exclude>TestPermissionChecks.java</exclude>
@@ -257,6 +258,19 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>${maven.failsafe.version}</version>
 				<executions>
+					<execution>
+						<id>test-sap-extensions</id>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+						<configuration>
+							<argLine>
+							   -cp target/test-classes/
+							</argLine>
+							<includes>SapIntegrationTest.java</includes>
+						</configuration>
+					</execution>
 					<execution>
 						<id>test-permissions</id>
 						<goals>

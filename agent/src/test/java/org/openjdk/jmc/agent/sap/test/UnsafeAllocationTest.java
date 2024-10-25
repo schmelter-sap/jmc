@@ -38,7 +38,7 @@ public class UnsafeAllocationTest extends TestBase {
 		} else if (DO_NATIVE_ALLOCS.equals(args[0])) {
 			doNativeAllocs();
 		} else {
-			System.out.println("Unknown test '" + args[0] + "'");
+			throw new RuntimeException("Unknown test '" + args[0] + "'");
 		}
 	}
 

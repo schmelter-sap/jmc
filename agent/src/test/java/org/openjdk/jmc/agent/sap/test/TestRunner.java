@@ -18,12 +18,14 @@ public class TestRunner {
 				leftArgs.remove(0);
 			} else if (first.equals("-debug")) {
 				if (leftArgs.size() < 2) {
-					System.err.println("Missing port to '-debug'");
-					return;
+					throw new Exception("Missing port to '-debug'");
 				}
 
 				JavaAgentRunner.setDebugPort(Integer.parseInt(leftArgs.get(1)));
 				leftArgs.remove(0);
+				leftArgs.remove(0);
+			} else if (first.equals("-smoke")) {
+				TestBase.setSmokeTestOnly();
 				leftArgs.remove(0);
 			} else {
 				break;

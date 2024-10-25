@@ -52,7 +52,7 @@ public class JavaAgentRunner {
 			return file.getAbsolutePath();
 		}
 
-		throw new RuntimeException("Could not find agent " + AGENT_NAME);
+		throw new RuntimeException("Could not find agent " + AGENT_NAME + " (WD " + System.getProperty("user.dir"));
 	}
 
 	private static String getExe(String name) {

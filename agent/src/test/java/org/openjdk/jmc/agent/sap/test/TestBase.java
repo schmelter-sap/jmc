@@ -4,6 +4,8 @@ import java.util.regex.Pattern;
 
 public class TestBase {
 
+	private static boolean smokeTestsOnly;
+
 	private static void failLines(String[] lines, String msg) {
 		failLines(lines, msg, -1);
 	}
@@ -45,5 +47,13 @@ public class TestBase {
 				return;
 			}
 		}
+	}
+
+	public static void setSmokeTestOnly() {
+		smokeTestsOnly = true;
+	}
+
+	public static boolean smokeTestsOnly() {
+		return smokeTestsOnly;
 	}
 }
