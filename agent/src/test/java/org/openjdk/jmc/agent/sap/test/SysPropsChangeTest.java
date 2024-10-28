@@ -6,7 +6,7 @@ import java.util.Properties;
 
 // You can run it via (if the cwd is the agent directory):
 // java -javaagent:target/agent-1.0.1-SNAPSHOT.jar=traceSysPropsChange -cp target/test-classes org.openjdk.jmc.agent.sap.test.SystemPropertiesChanger
-public class SystemPropertiesChanger extends TestBase {
+public class SysPropsChangeTest extends TestBase {
 
 	private static String TEST = "test";
 
@@ -21,15 +21,14 @@ public class SystemPropertiesChanger extends TestBase {
 	}
 
 	public static void baseTest() throws IOException {
-		JavaAgentRunner runner = new JavaAgentRunner(SystemPropertiesChanger.class,
-				"traceSysPropsChange,logDest=stdout");
+		JavaAgentRunner runner = new JavaAgentRunner(SysPropsChangeTest.class, "traceSysPropsChange,logDest=stdout");
 		runner.start(TEST);
 		runner.waitForEnd();
 		assertLinesContainsRegExp(runner.getStdoutLines(),
 				"System property 'TEST_KEY' changed from 'null' to 'TEST_VAL'");
 		assertLinesContainsRegExp(runner.getStdoutLines(),
 				"System properties 'TEST_KEY' with value 'TEST_VAL' removed");
-		assertLinesContainsRegExp(runner.getStdoutLines(), SystemPropertiesChanger.class.getName());
+		assertLinesContainsRegExp(runner.getStdoutLines(), SysPropsChangeTest.class.getName());
 		assertLinesNotContainsRegExp(runner.getStdoutLines(), "TEST_KEY_NO_SYS");
 	}
 
