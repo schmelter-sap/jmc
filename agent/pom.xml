@@ -265,6 +265,9 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
+							<systemPropertyVariables>
+								<fullTest>${fullTest}</fullTest>
+							</systemPropertyVariables>
 							<argLine>
 							   -cp target/test-classes/
 							</argLine>

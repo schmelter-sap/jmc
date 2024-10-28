@@ -6,6 +6,10 @@ public class SapIntegrationTest {
 
 	@Test
 	public void smokeTest() throws Exception {
-		TestRunner.main(new String[] {"-smoke"});
+		if (System.getProperty("fullTest", "false").equals("true")) {
+			TestRunner.main(new String[0]);
+		} else {
+			TestRunner.main(new String[] {"-smoke"});
+		}
 	}
 }
