@@ -57,6 +57,14 @@ public class TestBase {
 		return smokeTestsOnly;
 	}
 
+	public void assertRunnerFinished(JavaAgentRunner runner) {
+		int result = runner.waitForEnd();
+
+		if (result != 0) {
+			throw new AssertionError("Exit code " + result + " for " + runner.getCommandLine());
+		}
+	}
+
 	public static void sleep(long seconds) {
 		try {
 			Thread.sleep(seconds * 1000);

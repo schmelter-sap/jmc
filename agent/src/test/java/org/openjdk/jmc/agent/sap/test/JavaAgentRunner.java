@@ -15,10 +15,10 @@ public class JavaAgentRunner {
 	private final String[] vmArgs;
 	private final StringBuilder stdout;
 	private final StringBuilder stderr;
+	private String commandLine = "java";
 	private Thread stdoutWorker;
 	private Thread stderrWorker;
 	private Process process;
-	private String commandLine;
 	private static boolean dumpOnExit;
 	private static int debugPort = -1;
 	private static int MAX_WAIT_TIME = 60;
@@ -31,6 +31,37 @@ public class JavaAgentRunner {
 		this.vmArgs = vmArgs;
 		this.stdout = new StringBuilder();
 		this.stderr = new StringBuilder();
+	}
+
+	private ArrayList<String> getArgs(String[] javaArgs) {
+		ArrayList<String> args = new ArrayList<>();
+		args.add(getExe("java"));
+		args.add("-javaagent:" + getAgent() + "=" + options);
+		args.add("-cp");
+		args.add(System.getProperty("java.class.path"));
+
+		for (String vmArg : vmArgs) {
+			args.add(vmArg);
+		}
+
+		if (debugPort >= 0) {
+			args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=" + debugPort);
+			System.out.println("Waiting for debugger on port " + debugPort + ".");
+		}
+
+		args.add(classToRun);
+
+		for (String javaArg : javaArgs) {
+			args.add(javaArg);
+		}
+
+		commandLine = String.join(" ", args);
+
+		return args;
+	}
+
+	public String getCommandLine() {
+		return commandLine;
 	}
 
 	private static String getAgent() {
@@ -76,28 +107,8 @@ public class JavaAgentRunner {
 	public void start(String ... javaArgs) throws IOException {
 		stdout.setLength(0);
 		stderr.setLength(0);
-		ArrayList<String> args = new ArrayList<>();
-		args.add(getExe("java"));
-		args.add("-javaagent:" + getAgent() + "=" + options);
-		args.add("-cp");
-		args.add(System.getProperty("java.class.path"));
 
-		for (String vmArg : vmArgs) {
-			args.add(vmArg);
-		}
-
-		if (debugPort >= 0) {
-			args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=" + debugPort);
-			System.out.println("Waiting for debugger on port " + debugPort + ".");
-		}
-
-		args.add(classToRun);
-
-		for (String javaArg : javaArgs) {
-			args.add(javaArg);
-		}
-
-		ProcessBuilder pb = new ProcessBuilder(args);
+		ProcessBuilder pb = new ProcessBuilder(getArgs(javaArgs));
 		commandLine = String.join(" ", pb.command());
 		process = pb.start();
 		stdoutWorker = new Thread(new OutputReader(process.getInputStream(), stdout));
