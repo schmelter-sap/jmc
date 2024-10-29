@@ -32,25 +32,19 @@ public class UnsafeAllocationTest extends TestBase {
 		}
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException {
-		if (args.length == 0) {
-			testNativeAllocs();
+	public static void main(String[] args) {
+		new UnsafeAllocationTest().dispatch(args);
+	}
 
-			if (smokeTestsOnly()) {
-				return;
-			}
+	protected void runAllTests() throws Exception {
+		testNativeAllocs();
 
-			testDelayedDumping();
-			testAgeFiltering();
-		} else if (DO_ALLOCS.equals(args[0])) {
-			runRandomAllocs(args);
-		} else if (DO_NATIVE_ALLOCS.equals(args[0])) {
-			doNativeAllocs();
-		} else if (DO_DELAYED_ALLOCS.equals(args[0])) {
-			doDelayedAllocs();
-		} else {
-			throw new RuntimeException("Unknown test '" + args[0] + "'");
+		if (smokeTestsOnly()) {
+			return;
 		}
+
+		testDelayedDumping();
+		testAgeFiltering();
 	}
 
 	private static void done() {

@@ -1,10 +1,32 @@
 package org.openjdk.jmc.agent.sap.test;
 
+import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
-public class TestBase {
+public abstract class TestBase {
 
 	private static boolean smokeTestsOnly;
+
+	public void dispatch(String[] args) {
+		try {
+			if (args.length == 0) {
+				runAllTests();
+			} else {
+				try {
+					Method m = this.getClass().getDeclaredMethod(args[0]);
+					m.invoke(this);
+				} catch (NoSuchMethodException e) {
+					throw new RuntimeException("Indefined test '" + args[0] + "'");
+				}
+			}
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RuntimeException("Test failed", e);
+		}
+	}
+
+	protected abstract void runAllTests() throws Exception;
 
 	private static void failLines(String[] lines, String msg) {
 		failLines(lines, msg, -1);
