@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 public class TestRunner {
 	private static TestConfig[] testConfigs = new TestConfig[] {new TestConfig(UnsafeAllocationTest.class),
-			new TestConfig(SysPropsChangeTest.class)};
+			new TestConfig(SysPropsChangeTest.class), new TestConfig(TimeZoneChangeTest.class)};
 
 	public static void main(String[] args) throws Exception {
 		ArrayList<String> leftArgs = new ArrayList<>(Arrays.asList(args));
