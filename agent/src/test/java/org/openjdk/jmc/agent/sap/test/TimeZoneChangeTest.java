@@ -11,7 +11,7 @@ public class TimeZoneChangeTest extends TestBase {
 
 	@Override
 	protected void runAllTests() throws Exception {
-		JavaAgentRunner runner = new JavaAgentRunner(TimeZoneChangeTest.class, "traceTimeZoneChange,logDest=stdout");
+		JavaAgentRunner runner = getRunner("traceTimeZoneChange,logDest=stdout");
 		runner.start("changeTimeZones");
 		runner.waitForEnd();
 		assertLinesContainsRegExp(runner.getStdoutLines(),

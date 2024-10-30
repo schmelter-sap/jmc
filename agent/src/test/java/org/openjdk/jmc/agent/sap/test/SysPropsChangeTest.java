@@ -13,7 +13,7 @@ public class SysPropsChangeTest extends TestBase {
 
 	@Override
 	protected void runAllTests() throws Exception {
-		JavaAgentRunner runner = new JavaAgentRunner(SysPropsChangeTest.class, "traceSysPropsChange,logDest=stdout");
+		JavaAgentRunner runner = getRunner("traceSysPropsChange,logDest=stdout");
 		runner.start("changeSystemProps");
 		runner.waitForEnd();
 		assertLinesContainsRegExp(runner.getStdoutLines(),

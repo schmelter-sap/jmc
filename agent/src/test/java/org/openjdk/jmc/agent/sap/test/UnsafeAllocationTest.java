@@ -58,9 +58,9 @@ public class UnsafeAllocationTest extends TestBase {
 		}
 	}
 
-	public static void testNativeAllocs() throws IOException {
-		JavaAgentRunner runner = new JavaAgentRunner(UnsafeAllocationTest.class,
-				"traceUnsafeAllocations,logDest=stdout", "--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
+	public void testNativeAllocs() throws IOException {
+		JavaAgentRunner runner = getRunner("traceUnsafeAllocations,logDest=stdout", "--add-opens",
+				"java.base/jdk.internal.misc=ALL-UNNAMED");
 		runner.start(DO_NATIVE_ALLOCS);
 		runner.waitForStdout(DONE);
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,mustContain=doNativeAllocs");
@@ -91,10 +91,9 @@ public class UnsafeAllocationTest extends TestBase {
 		assertLinesNotContainsRegExp(runner.getStderrLines(), "Printed");
 	}
 
-	public static void testRandomAllocs() throws IOException {
-		JavaAgentRunner runner = new JavaAgentRunner(UnsafeAllocationTest.class,
-				"traceUnsafeAllocations,dumpCount=1,dumpInterval=3s,logDest=stdout", "--add-opens",
-				"java.base/jdk.internal.misc=ALL-UNNAMED");
+	public void testRandomAllocs() throws IOException {
+		JavaAgentRunner runner = getRunner("traceUnsafeAllocations,dumpCount=1,dumpInterval=3s,logDest=stdout",
+				"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
 		runner.start(DO_ALLOCS);
 		runner.waitForStdout(DONE);
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,maxFrames=8");
@@ -128,8 +127,8 @@ public class UnsafeAllocationTest extends TestBase {
 		done();
 	}
 
-	public static void testDelayedDumping() throws IOException {
-		JavaAgentRunner runner = new JavaAgentRunner(UnsafeAllocationTest.class,
+	public void testDelayedDumping() throws IOException {
+		JavaAgentRunner runner = getRunner(
 				"traceUnsafeAllocations,dumpCount=2,minSize=7M,dumpInterval=1s,"
 						+ "minPercentage=300,logDest=stdout,exitAfterLastDump=true",
 				"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
@@ -154,9 +153,9 @@ public class UnsafeAllocationTest extends TestBase {
 		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 4 of 4 allocations with 38797312 bytes");
 	}
 
-	public static void testAgeFiltering() throws IOException {
-		JavaAgentRunner runner = new JavaAgentRunner(UnsafeAllocationTest.class,
-				"traceUnsafeAllocations,logDest=stdout", "--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
+	public void testAgeFiltering() throws IOException {
+		JavaAgentRunner runner = getRunner("traceUnsafeAllocations,logDest=stdout", "--add-opens",
+				"java.base/jdk.internal.misc=ALL-UNNAMED");
 		runner.start(DO_DELAYED_ALLOCS);
 		runner.waitForStdout(DONE);
 		runner.loadAgent("dump=unsafeAllocations,maxAge=27s,minAge=13s");

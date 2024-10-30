@@ -26,6 +26,10 @@ public abstract class TestBase {
 		}
 	}
 
+	public JavaAgentRunner getRunner(String options, String ... vmArgs) {
+		return new JavaAgentRunner(getClass(), options, vmArgs);
+	}
+
 	protected abstract void runAllTests() throws Exception;
 
 	private static void failLines(String[] lines, String msg) {
