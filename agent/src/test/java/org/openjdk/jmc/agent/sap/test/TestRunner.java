@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class TestRunner {
-	private static TestConfig[] testConfigs = new TestConfig[] {new TestConfig(UnsafeAllocationTest.class),
-			new TestConfig(SysPropsChangeTest.class), new TestConfig(TimeZoneChangeTest.class)};
+	private static Class<?>[] testClasses = new Class[] {UnsafeAllocationTest.class, SysPropsChangeTest.class,
+			TimeZoneChangeTest.class, LocaleChangeTest.class};
 
 	public static void main(String[] args) throws Exception {
 		ArrayList<String> leftArgs = new ArrayList<>(Arrays.asList(args));
@@ -33,33 +33,23 @@ public class TestRunner {
 			}
 		}
 
-		for (TestConfig testConfig : testConfigs) {
+		for (Class<?> testClass : testClasses) {
 			boolean run = false;
 
 			if (leftArgs.size() == 0) {
 				run = true;
 			} else {
 				for (String arg : leftArgs) {
-					if (testConfig.testClass.getName().endsWith("." + arg)) {
+					if (testClass.getName().endsWith("." + arg)) {
 						run = true;
 					}
 				}
 			}
 
 			if (run) {
-				Method mainMethod = testConfig.testClass.getDeclaredMethod("main", String[].class);
-				mainMethod.invoke(null, new Object[] {testConfig.args});
+				Method mainMethod = testClass.getDeclaredMethod("main", String[].class);
+				mainMethod.invoke(null, new Object[] {new String[0]});
 			}
-		}
-	}
-
-	private static class TestConfig {
-		public final Class<?> testClass;
-		public final String[] args;
-
-		public TestConfig(Class<?> testClass, String ... args) {
-			this.testClass = testClass;
-			this.args = args.clone();
 		}
 	}
 }
