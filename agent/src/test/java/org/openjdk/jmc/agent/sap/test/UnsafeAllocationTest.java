@@ -15,7 +15,6 @@ public class UnsafeAllocationTest extends TestBase {
 	private static String DO_ALLOCS = "runRandomAllocs";
 	private static String DO_NATIVE_ALLOCS = "doNativeAllocs";
 	private static String DO_DELAYED_ALLOCS = "doDelayedAllocs";
-	private static String DONE = "DONE";
 	private static long DELAY = 10;
 
 	private static void initUnsafe() {
@@ -47,43 +46,32 @@ public class UnsafeAllocationTest extends TestBase {
 		testAgeFiltering();
 	}
 
-	private static void done() {
-		System.out.println(DONE);
-		while (true) {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	public void testNativeAllocs() throws IOException {
 		JavaAgentRunner runner = getRunner("traceUnsafeAllocations,logDest=stdout", "--add-opens",
 				"java.base/jdk.internal.misc=ALL-UNNAMED");
 		runner.start(DO_NATIVE_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,mustContain=doNativeAllocs");
 		runner.kill();
 		assertLinesContainsRegExp(runner.getStderrLines(), "Allocated 570 bytes at");
 		assertLinesContainsRegExp(runner.getStderrLines(), "Allocated 750 bytes at");
 		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 2 of 2 allocations with 1320 bytes");
 		runner.start(DO_NATIVE_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,mustNotContain=reallocateMemory");
 		runner.kill();
 		assertLinesNotContainsRegExp(runner.getStderrLines(), "Allocated 570 bytes at");
 		assertLinesContainsRegExp(runner.getStderrLines(), "Allocated 750 bytes at");
 		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 1 of 2 allocations with 750 bytes");
 		runner.start(DO_NATIVE_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,minStackSize=571");
 		runner.kill();
 		assertLinesNotContainsRegExp(runner.getStderrLines(), "Allocated 570 bytes at");
 		assertLinesContainsRegExp(runner.getStderrLines(), "Allocated 750 bytes at");
 		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 1 of 2 allocations with 750 bytes");
 		runner.start(DO_NATIVE_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,minAge=1");
 		runner.kill();
 		assertLinesNotContainsRegExp(runner.getStderrLines(), "Allocated 570 bytes at");
@@ -95,7 +83,7 @@ public class UnsafeAllocationTest extends TestBase {
 		JavaAgentRunner runner = getRunner("traceUnsafeAllocations,dumpCount=1,dumpInterval=3s,logDest=stdout",
 				"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
 		runner.start(DO_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,maxFrames=8");
 		runner.kill();
 		assertLinesContainsRegExp(runner.getStdoutLines(), "^Printed [0-9]+ of [0-9] allocations with [0-9]+ bytes");
@@ -145,7 +133,7 @@ public class UnsafeAllocationTest extends TestBase {
 						+ "minPercentage=101,logDest=stdout,exitAfterLastDump=false",
 				"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
 		runner.start(DO_DELAYED_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.kill();
 		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 1 of 1 allocations with 1048576 bytes");
 		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 2 of 2 allocations with 8388608 bytes");
@@ -157,17 +145,17 @@ public class UnsafeAllocationTest extends TestBase {
 		JavaAgentRunner runner = getRunner("traceUnsafeAllocations,logDest=stdout", "--add-opens",
 				"java.base/jdk.internal.misc=ALL-UNNAMED");
 		runner.start(DO_DELAYED_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,maxAge=27s,minAge=13s");
 		runner.kill();
 		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 1 of 4 allocations with 9437184 bytes");
 		runner.start(DO_DELAYED_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,minAge=13s");
 		runner.kill();
 		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 3 of 4 allocations with 17825792");
 		runner.start(DO_DELAYED_ALLOCS);
-		runner.waitForStdout(DONE);
+		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,maxAge=27s");
 		runner.kill();
 		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 2 of 4 allocations with 30408704 bytes");

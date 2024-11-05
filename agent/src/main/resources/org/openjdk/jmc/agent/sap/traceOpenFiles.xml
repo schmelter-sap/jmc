@@ -29,7 +29,7 @@
                     <name>hasOpened</name>
                     <expression>this</expression>
                     <description>has the file been opened</description>
-                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileInputStream(V</converter>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openFileInputStream()V</converter>
                 </field>
             </fields>
         </event>

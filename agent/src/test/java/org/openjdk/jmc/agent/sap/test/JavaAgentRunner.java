@@ -336,4 +336,8 @@ public class JavaAgentRunner {
 			}
 		}
 	}
+
+	public void waitForDone() {
+		waitForStdout(TestBase.DONE);
+	}
 }

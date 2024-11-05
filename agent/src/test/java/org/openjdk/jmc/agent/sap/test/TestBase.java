@@ -6,12 +6,28 @@ import java.util.regex.Pattern;
 public abstract class TestBase {
 
 	private static boolean smokeTestsOnly;
+	public static String DONE = "DONE";
+	public static long MAX_TEST_CASE_DURATION = 5 * 60;
 
 	public void dispatch(String[] args) {
 		try {
 			if (args.length == 0) {
 				runAllTests();
 			} else {
+				Thread killer = new Thread(() -> {
+					while (true) {
+						try {
+							Thread.sleep(MAX_TEST_CASE_DURATION * 1000);
+							System.err.println("Test run in timeout.");
+							System.exit(1);
+						} catch (InterruptedException e) {
+							// Ignore
+						}
+					}
+				}, "Timeout Thread");
+				killer.setDaemon(true);
+				killer.start();
+
 				try {
 					Method m = this.getClass().getDeclaredMethod(args[0]);
 					m.invoke(this);
@@ -96,6 +112,18 @@ public abstract class TestBase {
 			Thread.sleep(seconds * 1000);
 		} catch (InterruptedException e) {
 
+		}
+	}
+
+	protected static void done() {
+		System.out.println(DONE);
+
+		while (true) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

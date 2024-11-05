@@ -5,10 +5,20 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.IdentityHashMap;
 
+import org.openjdk.jmc.agent.sap.boot.commands.Command;
+import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.Dumps;
+import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
+
 public class FileOpenCloseLogger {
 
 	private static IdentityHashMap<Object, String> mapping = new IdentityHashMap<>();
 	private static final ThreadLocal<String> pathKey = new ThreadLocal<String>();
+
+	static {
+		Dumps.registerDump(new Command("openFiles", "Dump the currently open files by Java."), null,
+				(CommandArguments args) -> printOpenFiles(args));
+	}
 
 	public synchronized static boolean openFileInputStream(FileInputStream stream) {
 		assert !mapping.containsKey(stream);
@@ -66,5 +76,18 @@ public class FileOpenCloseLogger {
 		mapping.remove(stream);
 
 		return result;
+	}
+
+	public static boolean printOpenFiles(CommandArguments args) {
+		IdentityHashMap<Object, String> copy;
+
+		// Make a copy first, since logging might open new files.
+		synchronized (FileOpenCloseLogger.class) {
+			copy = new IdentityHashMap<Object, String>(mapping);
+		}
+
+		JdkLogging.log(args, copy.size() + " file(s) currently opened.");
+
+		return false;
 	}
 }

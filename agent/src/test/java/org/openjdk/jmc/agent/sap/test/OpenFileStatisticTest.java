@@ -7,10 +7,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.regex.Pattern;
 
-public class OpenFileStatisticRunner {
+public class OpenFileStatisticTest extends TestBase {
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
+		new OpenFileStatisticTest().dispatch(args);
+	}
+
+	@Override
+	protected void runAllTests() throws Exception {
+		JavaAgentRunner runner = getRunner("traceOpenFiles,logDest=stdout");
+		runner.start("test");
+		runner.waitForDone();
+		runner.loadAgent("dump=openFiles,logDest=stderr");
+		runner.kill();
+		assertLinesContainsRegExp(runner.getStderrLines(), Pattern.quote("1 file(s) currently opened."));
+	}
+
+	public void test() throws IOException {
 		String fileName = "testopen.txt";
 		File file = new File(fileName);
 		FileOutputStream fos = new FileOutputStream(fileName);
@@ -35,5 +50,7 @@ public class OpenFileStatisticRunner {
 		} catch (FileNotFoundException e) {
 			// This is what we expect.
 		}
+
+		done();
 	}
 }
