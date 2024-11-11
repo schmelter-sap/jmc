@@ -131,11 +131,10 @@ public class JdkLogging {
 	}
 
 	public static void log(CommandArguments args, String msg) {
-		PrintStream stream = getStream(args);
-		stream.println(msg);
+		getStream(args).println(msg);
 
 		if (args.getBoolean(LOG_WITH_STACK, false)) {
-			logStack(stream);
+			logCurrentStack(args, 1);
 		}
 	}
 
@@ -144,21 +143,25 @@ public class JdkLogging {
 		formatter.format(format + "\n", values);
 
 		if (args.getBoolean(LOG_WITH_STACK, false)) {
-			logStack(getStream(args));
+			logCurrentStack(args, 1);
 		}
 	}
 
-	private static void logStack(PrintStream stream) {
-		StackTraceElement[] frames = new Exception().getStackTrace();
+	private static void logCurrentStack(CommandArguments args, int toSkip) {
+		logStack(args, new Exception(), toSkip);
+	}
 
-		for (int i = 3; i < frames.length; ++i) {
+	public static void logWithStack(CommandArguments args, String msg, int toSkip) {
+		getStream(args).println(msg);
+		logStack(args, new Exception(), toSkip);
+	}
+
+	public static void logStack(CommandArguments args, Exception stack, int toSkip) {
+		PrintStream stream = getStream(args);
+		StackTraceElement[] frames = stack.getStackTrace();
+
+		for (int i = toSkip; i < frames.length; ++i) {
 			stream.println("\t" + frames[i]);
 		}
-	}
-
-	public static void logWithStack(CommandArguments args, String msg) {
-		PrintStream stream = getStream(args);
-		stream.println(msg);
-		logStack(stream);
 	}
 }

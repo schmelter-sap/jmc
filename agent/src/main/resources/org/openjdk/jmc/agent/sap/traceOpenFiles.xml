@@ -108,5 +108,59 @@
                 </field>
             </fields>
         </event>
+        <event id="jdk.log.randomAccessFileOpen">
+            <label>randomAccessFileOpen</label>
+            <description>Traces the RandomAccessFile constructor taking a File</description>
+            <class>java.io.RandomAccessFile</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <location>EXIT</location>
+            <path>jdk/log/file/statistic</path>
+            <method>
+                <name>RandomAccessFile</name>
+                <descriptor>(Ljava/io/File;Ljava/lang/String;)V</descriptor>
+                <parameters>
+                    <parameter index="0">
+                        <name>fileName</name>
+                        <description>The file name</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openRandomAccessFile()V</converter>
+                    </parameter>
+                    <parameter index="1">
+                        <name>append</name>
+                        <description>The append flag</description>
+                        <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openRandomAccessFileMode()V</converter>
+                    </parameter>
+                </parameters>
+            </method>
+            <fields>
+                <field>
+                    <name>hasOpened</name>
+                    <expression>this</expression>
+                    <description>has the file been opened</description>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.openRandomAccessFile()V</converter>
+                </field>
+            </fields>
+        </event>
+        <event id="jdk.log.randomAccessFileClose">
+            <label>randomAccessFileClose</label>
+            <description>Traces the RandomAccessFile close call</description>
+            <class>java.io.RandomAccessFile</class>
+            <stacktrace>true</stacktrace>
+            <rethrow>false</rethrow>
+            <location>EXIT</location>
+            <path>jdk/log/file/statistic</path>
+            <method>
+                <name>close</name>
+                <descriptor>()V</descriptor>
+            </method>
+            <fields>
+                <field>
+                    <name>closedFile</name>
+                    <expression>this</expression>
+                    <description>The closed file</description>
+                    <converter>org.openjdk.jmc.agent.sap.boot.converters.FileOpenCloseLogger.closeRandomAccessFile()V</converter>
+                </field>
+            </fields>
+        </event>
     </events>
 </jfragent>

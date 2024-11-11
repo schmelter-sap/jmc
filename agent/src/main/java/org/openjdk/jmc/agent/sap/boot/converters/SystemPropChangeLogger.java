@@ -58,10 +58,10 @@ public class SystemPropChangeLogger {
 			String oldVal = props.getProperty(key);
 
 			if (val == null) {
-				JdkLogging.logWithStack(args, "System properties '" + key + "' with value '" + oldVal + "' removed");
+				JdkLogging.logWithStack(args, "System properties '" + key + "' with value '" + oldVal + "' removed", 3);
 			} else {
 				JdkLogging.logWithStack(args,
-						"System property '" + key + "' changed from '" + oldVal + "' to '" + val + "'");
+						"System property '" + key + "' changed from '" + oldVal + "' to '" + val + "'", 3);
 			}
 
 			return true;
