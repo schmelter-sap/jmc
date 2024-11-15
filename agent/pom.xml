@@ -267,6 +267,7 @@
 						<configuration>
 							<systemPropertyVariables>
 								<fullTest>${fullTest}</fullTest>
+								<dumpOutputToFile>${dumpOutputToFile}</dumpOutputToFile>
 							</systemPropertyVariables>
 							<argLine>
 							   -cp target/test-classes/

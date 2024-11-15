@@ -1,8 +1,10 @@
 package org.openjdk.jmc.agent.sap.test;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.ProcessBuilder.Redirect;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -24,6 +26,7 @@ public class JavaAgentRunner {
 	private static int MAX_WAIT_TIME = 60;
 
 	private static final String AGENT_NAME = "agent-1.0.1-SNAPSHOT.jar";
+	private static final boolean dumpOutputToFile = Boolean.getBoolean("dumpOutputToFile");
 
 	public JavaAgentRunner(Class<?> classToRun, String options, String ... vmArgs) {
 		this.classToRun = classToRun.getName();
@@ -110,6 +113,7 @@ public class JavaAgentRunner {
 
 		ProcessBuilder pb = new ProcessBuilder(getArgs(javaArgs));
 		commandLine = String.join(" ", pb.command());
+		dumpToAll("------------------------", commandLine);
 		process = pb.start();
 		stdoutWorker = new Thread(new OutputReader(process.getInputStream(), stdout));
 		stdoutWorker.setDaemon(true);
@@ -154,7 +158,7 @@ public class JavaAgentRunner {
 
 				if (result != 0) {
 					kill();
-					dumpOnExit();
+					dumpOnExit(result);
 					throw new RuntimeException(pb.command().toString() + " return with exit code " + result);
 				}
 
@@ -173,6 +177,7 @@ public class JavaAgentRunner {
 				boolean exited = process.waitFor(5, TimeUnit.SECONDS);
 
 				if (!exited && !checkWaitTimeout(t1)) {
+					dumpOnExit(-1);
 					throw new RuntimeException("Waited over one minute for the process to end.");
 				}
 
@@ -181,10 +186,7 @@ public class JavaAgentRunner {
 				}
 
 				int result = process.exitValue();
-
-				if (result != 0) {
-					dumpOnExit();
-				}
+				dumpOnExit(result);
 
 				return result;
 			} catch (InterruptedException e) {
@@ -238,14 +240,45 @@ public class JavaAgentRunner {
 		debugPort = port;
 	}
 
-	private void dumpOnExit() {
-		if (dumpOnExit) {
+	private void dumpOnExit(int result) {
+		if (dumpOnExit && (result != 0)) {
 			waitForOutput();
 			System.out.println("Command line: " + commandLine);
 			System.out.println("Output on stdout:");
 			dumpLines(stdout);
 			System.out.println("Output on stderr:");
 			dumpLines(stderr);
+		}
+
+		if (dumpOutputToFile) {
+			dumpToFile(getStdoutLines(), false);
+			dumpToFile(getStderrLines(), true);
+			dumpToAll("------------------------", getCommandLine() + " end with result " + result);
+		}
+	}
+
+	private void dumpToAll(String ... lines) {
+		if (dumpOutputToFile) {
+			dumpToFile(lines, false);
+			dumpToFile(lines, true);
+		}
+	}
+
+	private void dumpToFile(String[] lines, boolean stderr) {
+		File outputDir = new File("target", "output");
+
+		if (!outputDir.exists()) {
+			outputDir.mkdir();
+		}
+
+		String filename = classToRun.substring(classToRun.lastIndexOf('.') + 1) + (stderr ? ".stderr" : ".stdout");
+
+		try (PrintStream ps = new PrintStream(new FileOutputStream(new File(outputDir, filename), true))) {
+			for (String line : lines) {
+				ps.println(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -264,9 +297,7 @@ public class JavaAgentRunner {
 			// Ignore.
 		}
 
-		if (result != 0) {
-			dumpOnExit();
-		}
+		dumpOnExit(result);
 	}
 
 	private boolean checkWaitTimeout(long t1) {

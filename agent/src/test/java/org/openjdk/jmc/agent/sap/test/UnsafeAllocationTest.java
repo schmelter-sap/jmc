@@ -128,7 +128,7 @@ public class UnsafeAllocationTest extends TestBase {
 		assertLinesNotContainsRegExp(runner.getStdoutLines(), "Printed 3 of 3 allocations");
 		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 4 of 4 allocations with 38797312 bytes");
 		assertLinesNotContainsRegExp(runner.getStdoutLines(), DONE);
-		runner = new JavaAgentRunner(UnsafeAllocationTest.class,
+		runner = getRunner(
 				"traceUnsafeAllocations,dumpCount=4,minSize=1M,dumpInterval=1s,"
 						+ "minPercentage=101,logDest=stdout,exitAfterLastDump=false",
 				"--add-opens", "java.base/jdk.internal.misc=ALL-UNNAMED");
