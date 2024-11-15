@@ -42,7 +42,7 @@ public class LocaleChangeLogger {
 					"Changed default locale for category '" + categoryKey.get().name() + "' from '"
 							+ oldLocale.getDisplayName(Locale.ENGLISH) + "' to '"
 							+ newLocale.getDisplayName(Locale.ENGLISH) + "'.",
-					3);
+					2);
 		}
 
 		categoryKey.remove();

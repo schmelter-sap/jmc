@@ -22,7 +22,7 @@ public class TimeZoneChangeLogger {
 		// If this same, don't log it. 
 		if (changesDefaultTimeZone(newZone)) {
 			JdkLogging.logWithStack(new CommandArguments(command),
-					"Changed default time zone to " + result + " (" + newZone.toZoneId().toString() + ").", 3);
+					"Changed default time zone to " + result + " (" + newZone.toZoneId().toString() + ").", 2);
 		}
 
 		return result;
