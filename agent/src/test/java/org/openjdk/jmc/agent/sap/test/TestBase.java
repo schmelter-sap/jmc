@@ -91,6 +91,12 @@ public abstract class TestBase {
 		}
 	}
 
+	public static void assertNotNull(Object obj) {
+		if (obj == null) {
+			throw new AssertionError("Object is null");
+		}
+	}
+
 	public static void setSmokeTestOnly() {
 		smokeTestsOnly = true;
 	}
@@ -115,8 +121,18 @@ public abstract class TestBase {
 		}
 	}
 
+	protected static void done(int index, long waitTime) {
+		System.out.println(DONE + index);
+
+		try {
+			Thread.sleep(waitTime);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
 	protected static void done() {
-		System.out.println(DONE);
+		System.out.println(DONE + "*");
 
 		while (true) {
 			try {

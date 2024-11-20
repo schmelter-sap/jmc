@@ -323,6 +323,14 @@ public class JavaAgentRunner {
 				}
 
 				if (!checkWaitTimeout(t1)) {
+					System.out.println("stdout:");
+					synchronized (stdout) {
+						System.out.println(stdout);
+					}
+					System.out.println("stderr:");
+					synchronized (stderr) {
+						System.out.println(stderr);
+					}
 					throw new RuntimeException("Waited over one minute for '" + tag + "'");
 				}
 
@@ -369,6 +377,10 @@ public class JavaAgentRunner {
 	}
 
 	public void waitForDone() {
-		waitForStdout(TestBase.DONE);
+		waitForStdout(TestBase.DONE + "*");
+	}
+
+	public void waitForDone(int index) {
+		waitForStdout(TestBase.DONE + index);
 	}
 }

@@ -1,9 +1,12 @@
 package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.regex.Pattern;
 
@@ -18,6 +21,7 @@ public class FileOpenCloseLogger {
 	private static IdentityHashMap<Object, Entry> mapping = new IdentityHashMap<>();
 	private static final ThreadLocal<String> pathKey = new ThreadLocal<String>();
 	private static final ThreadLocal<String> modeKey = new ThreadLocal<String>();
+	private static final String UNKNOWN_FILE = "<unknown file>";
 
 	public static final Command command = OpenFileStatisticCommand.enableCommand;
 
@@ -27,17 +31,15 @@ public class FileOpenCloseLogger {
 	}
 
 	public static synchronized boolean openFileInputStream(FileInputStream stream) {
-		assert !mapping.containsKey(stream);
-		assert pathKey.get() != null;
-		assert modeKey.get() == null;
-		mapping.put(stream, new Entry(pathKey.get(), "r", new Exception()));
-		pathKey.remove();
+		if (pathKey.get() != null) {
+			mapping.put(stream, new Entry(pathKey.get(), "r", new Exception()));
+			pathKey.remove();
+		}
 
 		return true;
 	}
 
 	public static synchronized String openFileInputStream(File file) {
-		assert pathKey.get() == null;
 		String result = file.getAbsolutePath();
 		pathKey.set(result);
 
@@ -45,19 +47,22 @@ public class FileOpenCloseLogger {
 	}
 
 	public static synchronized String closeFileInputStream(FileInputStream stream) {
-		assert pathKey.get() == null;
-		assert mapping.containsKey(stream);
-		String result = mapping.get(stream).path;
-		mapping.remove(stream);
+		Entry entry = mapping.get(stream);
 
-		return result;
+		if (entry != null) {
+			mapping.remove(stream);
+
+			return entry.path;
+		}
+
+		return UNKNOWN_FILE;
 	}
 
 	public static synchronized boolean openFileOutputStream(FileOutputStream stream) {
-		assert !mapping.containsKey(stream);
-		assert pathKey.get() != null;
-		assert modeKey.get() != null;
-		mapping.put(stream, new Entry(pathKey.get(), modeKey.get(), new Exception()));
+		if ((pathKey.get() != null) && (modeKey.get() != null)) {
+			mapping.put(stream, new Entry(pathKey.get(), modeKey.get(), new Exception()));
+		}
+
 		pathKey.remove();
 		modeKey.remove();
 
@@ -65,15 +70,12 @@ public class FileOpenCloseLogger {
 	}
 
 	public static synchronized boolean openFileOutputStream(boolean append) {
-		assert pathKey.get() != null;
-		assert modeKey.get() == null;
 		modeKey.set(append ? "wa" : "w");
 
 		return append;
 	}
 
 	public static synchronized String openFileOutputStream(File file) {
-		assert pathKey.get() == null;
 		String result = file.getAbsolutePath();
 		pathKey.set(result);
 
@@ -81,16 +83,18 @@ public class FileOpenCloseLogger {
 	}
 
 	public static synchronized String closeFileOutputStream(FileOutputStream stream) {
-		assert pathKey.get() == null;
-		assert mapping.containsKey(stream);
-		String result = mapping.get(stream).path;
-		mapping.remove(stream);
+		Entry entry = mapping.get(stream);
 
-		return result;
+		if (entry != null) {
+			mapping.remove(stream);
+
+			return entry.path;
+		}
+
+		return UNKNOWN_FILE;
 	}
 
 	public static synchronized String openRandomAccessFile(File file) {
-		assert pathKey.get() == null;
 		String result = file.getAbsolutePath();
 		pathKey.set(result);
 
@@ -102,27 +106,29 @@ public class FileOpenCloseLogger {
 	}
 
 	public static synchronized String openRandomAccessFileMode(String mode) {
-		assert modeKey.get() == null;
 		modeKey.set(mode);
 
 		return mode;
 	}
 
 	public static synchronized boolean openRandomAccessFile(RandomAccessFile file) {
-		assert pathKey.get() != null;
-		assert modeKey.get() != null;
-		assert !mapping.containsKey(file);
-		mapping.put(file, new Entry(pathKey.get(), modeKey.get(), new Exception()));
+		if ((pathKey.get() != null) && (modeKey.get() != null)) {
+			mapping.put(file, new Entry(pathKey.get(), modeKey.get(), new Exception()));
+		}
 
 		return true;
 	}
 
 	public static synchronized String closeRandomAccessFile(RandomAccessFile file) {
-		assert mapping.containsKey(file);
-		String path = mapping.get(file).path;
-		mapping.remove(file);
+		Entry entry = mapping.get(file);
 
-		return path;
+		if (entry != null) {
+			mapping.remove(file);
+
+			return entry.path;
+		}
+
+		return UNKNOWN_FILE;
 	}
 
 	public static boolean printOpenFiles(CommandArguments args) {
@@ -131,6 +137,30 @@ public class FileOpenCloseLogger {
 		// Make a copy first, since logging might open new files.
 		synchronized (FileOpenCloseLogger.class) {
 			copy = new IdentityHashMap<Object, Entry>(mapping);
+		}
+
+		for (Object obj : new ArrayList<Object>(copy.keySet())) {
+			boolean remove = true;
+
+			try {
+				FileDescriptor fd = null;
+
+				if (obj instanceof FileInputStream) {
+					fd = ((FileInputStream) obj).getFD();
+				} else if (obj instanceof FileOutputStream) {
+					fd = ((FileOutputStream) obj).getFD();
+				} else if (obj instanceof RandomAccessFile) {
+					fd = ((RandomAccessFile) obj).getFD();
+				}
+
+				remove = (fd == null) || !fd.valid();
+			} catch (IOException e) {
+				// Remove too.
+			}
+
+			if (remove) {
+				copy.remove(obj);
+			}
 		}
 
 		Pattern mustContain = args.getPattern(OpenFileStatisticCommand.MUST_CONTAIN, null);
