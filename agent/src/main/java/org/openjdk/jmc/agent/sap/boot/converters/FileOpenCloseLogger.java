@@ -6,8 +6,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 
 import org.openjdk.jmc.agent.sap.boot.commands.Command;
@@ -18,7 +19,7 @@ import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
 
 public class FileOpenCloseLogger {
 
-	private static IdentityHashMap<Object, Entry> mapping = new IdentityHashMap<>();
+	private static HashMap<Key, Entry> mapping = new HashMap<>();
 	private static final ThreadLocal<String> pathKey = new ThreadLocal<String>();
 	private static final ThreadLocal<String> modeKey = new ThreadLocal<String>();
 	private static final String UNKNOWN_FILE = "<unknown file>";
@@ -32,7 +33,7 @@ public class FileOpenCloseLogger {
 
 	public static synchronized boolean openFileInputStream(FileInputStream stream) {
 		if (pathKey.get() != null) {
-			mapping.put(stream, new Entry(pathKey.get(), "r", new Exception()));
+			mapping.put(new Key(stream), new Entry(pathKey.get(), "r", new Exception()));
 			pathKey.remove();
 		}
 
@@ -47,10 +48,11 @@ public class FileOpenCloseLogger {
 	}
 
 	public static synchronized String closeFileInputStream(FileInputStream stream) {
-		Entry entry = mapping.get(stream);
+		Key key = new Key(stream);
+		Entry entry = mapping.get(key);
 
 		if (entry != null) {
-			mapping.remove(stream);
+			mapping.remove(key);
 
 			return entry.path;
 		}
@@ -60,7 +62,7 @@ public class FileOpenCloseLogger {
 
 	public static synchronized boolean openFileOutputStream(FileOutputStream stream) {
 		if ((pathKey.get() != null) && (modeKey.get() != null)) {
-			mapping.put(stream, new Entry(pathKey.get(), modeKey.get(), new Exception()));
+			mapping.put(new Key(stream), new Entry(pathKey.get(), modeKey.get(), new Exception()));
 		}
 
 		pathKey.remove();
@@ -83,10 +85,11 @@ public class FileOpenCloseLogger {
 	}
 
 	public static synchronized String closeFileOutputStream(FileOutputStream stream) {
-		Entry entry = mapping.get(stream);
+		Key key = new Key(stream);
+		Entry entry = mapping.get(key);
 
 		if (entry != null) {
-			mapping.remove(stream);
+			mapping.remove(key);
 
 			return entry.path;
 		}
@@ -113,17 +116,18 @@ public class FileOpenCloseLogger {
 
 	public static synchronized boolean openRandomAccessFile(RandomAccessFile file) {
 		if ((pathKey.get() != null) && (modeKey.get() != null)) {
-			mapping.put(file, new Entry(pathKey.get(), modeKey.get(), new Exception()));
+			mapping.put(new Key(file), new Entry(pathKey.get(), modeKey.get(), new Exception()));
 		}
 
 		return true;
 	}
 
 	public static synchronized String closeRandomAccessFile(RandomAccessFile file) {
-		Entry entry = mapping.get(file);
+		Key key = new Key(file);
+		Entry entry = mapping.get(key);
 
 		if (entry != null) {
-			mapping.remove(file);
+			mapping.remove(key);
 
 			return entry.path;
 		}
@@ -132,14 +136,24 @@ public class FileOpenCloseLogger {
 	}
 
 	public static boolean printOpenFiles(CommandArguments args) {
-		IdentityHashMap<Object, Entry> copy;
+		HashMap<Key, Entry> copy;
 
 		// Make a copy first, since logging might open new files.
 		synchronized (FileOpenCloseLogger.class) {
-			copy = new IdentityHashMap<Object, Entry>(mapping);
+			copy = new HashMap<Key, Entry>(mapping);
 		}
 
-		for (Object obj : new ArrayList<Object>(copy.keySet())) {
+		for (Key key : new ArrayList<Key>(copy.keySet())) {
+			Object obj = key.getObject();
+
+			// If the ref is dead, remove it from the original map.
+			if (obj == null) {
+				synchronized (FileOpenCloseLogger.class) {
+					mapping.remove(key);
+				}
+				// Fall through to remove from copy as well.
+			}
+
 			boolean remove = true;
 
 			try {
@@ -159,7 +173,7 @@ public class FileOpenCloseLogger {
 			}
 
 			if (remove) {
-				copy.remove(obj);
+				copy.remove(key);
 			}
 		}
 
@@ -190,6 +204,44 @@ public class FileOpenCloseLogger {
 		}
 
 		return printed > 0;
+	}
+
+	private static class Key {
+		private final WeakReference<Object> ref;
+		private final int hashCode;
+
+		public Key(Object obj) {
+			ref = new WeakReference<Object>(obj);
+			hashCode = System.identityHashCode(obj);
+		}
+
+		public Object getObject() {
+			return ref.get();
+		}
+
+		@Override
+		public int hashCode() {
+			return hashCode;
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof Key) {
+				if (this == other) {
+					// Needed so we can remove a dead key from the hash map.
+					return true;
+				}
+
+				Object thisKey = ref.get();
+				Object otherKey = ((Key) other).ref.get();
+
+				if ((thisKey != null) && (otherKey != null)) {
+					return thisKey == otherKey;
+				}
+			}
+
+			return false;
+		}
 	}
 
 	private static class Entry {

@@ -69,7 +69,13 @@ public abstract class TestBase {
 	}
 
 	public static void assertLinesContains(String[] lines, String substring) {
-		assertLinesContainsRegExp(lines, Pattern.quote(substring));
+		for (String line : lines) {
+			if (line.indexOf(substring) >= 0) {
+				return;
+			}
+		}
+
+		failLines(lines, "Could not find '" + substring + "' in the lines");
 	}
 
 	public static void assertLinesContainsRegExp(String[] lines, String regexp) {
@@ -85,7 +91,11 @@ public abstract class TestBase {
 	}
 
 	public static void assertLinesNotContains(String[] lines, String substring) {
-		assertLinesNotContainsRegExp(lines, Pattern.quote(substring));
+		for (String line : lines) {
+			if (line.indexOf(substring) >= 0) {
+				failLines(lines, "Unexpectedly found '" + substring + "' in the lines");
+			}
+		}
 	}
 
 	public static void assertLinesNotContainsRegExp(String[] lines, String regexp) {
