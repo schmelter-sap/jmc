@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.regex.Pattern;
 
 public class OpenFileStatisticTest extends TestBase {
 
@@ -30,10 +29,21 @@ public class OpenFileStatisticTest extends TestBase {
 
 		runner.kill();
 
-		assertLinesContainsRegExp(runner.getStderrLines(), Pattern.quote("10 file(s) currently opened."));
+		String[] stderr = runner.getStderrLines();
+		assertLinesContains(stderr, getFileName(1) + "', mode 'w'");
+		assertLinesContains(stderr, getFileName(2) + "', mode 'wa'");
+		assertLinesContains(stderr, getFileName(1) + "', mode 'r'");
+		assertLinesContains(stderr, getFileName(3) + "', mode 'w'");
+		assertLinesContains(stderr, getFileName(4) + "', mode 'wa'");
+		assertLinesContains(stderr, getFileName(2) + "', mode 'r'");
+		assertLinesContains(stderr, getFileName(5) + "', mode 'rw'");
+		assertLinesContains(stderr, getFileName(5) + "', mode 'r'");
+		assertLinesContains(stderr, getFileName(6) + "', mode 'rw'");
+		assertLinesContains(stderr, getFileName(6) + "', mode 'r'");
+		assertLinesContainsRegExp(stderr, "Printed [0-9]+ of [0-9][0-9]+ file.* currently opened");
 
 		if (!smokeTestsOnly()) {
-			assertLinesNotContainsRegExp(runner.getStdoutLines(), Pattern.quote(getFileName(1)));
+			assertLinesNotContains(runner.getStdoutLines(), getFileName(1));
 		}
 	}
 

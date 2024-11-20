@@ -68,6 +68,10 @@ public abstract class TestBase {
 		throw new AssertionError(msg);
 	}
 
+	public static void assertLinesContains(String[] lines, String substring) {
+		assertLinesContainsRegExp(lines, Pattern.quote(substring));
+	}
+
 	public static void assertLinesContainsRegExp(String[] lines, String regexp) {
 		Pattern pattern = Pattern.compile(regexp);
 
@@ -78,6 +82,10 @@ public abstract class TestBase {
 		}
 
 		failLines(lines, "Could not find regexp '" + regexp + "' in the lines");
+	}
+
+	public static void assertLinesNotContains(String[] lines, String substring) {
+		assertLinesNotContainsRegExp(lines, Pattern.quote(substring));
 	}
 
 	public static void assertLinesNotContainsRegExp(String[] lines, String regexp) {
