@@ -251,6 +251,18 @@
 							</includes>
 						</configuration>
 					</execution>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+						<configuration>
+							<classifier>sap-tests</classifier>
+							<includes>
+								<include>org/openjdk/jmc/agent/sap/**</include>
+								<include>org/openjdk/jmc/agent/test/sap/**</include>
+							</includes>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>

@@ -45,6 +45,14 @@ public class OpenFileStatisticTest extends TestBase {
 		if (!smokeTestsOnly()) {
 			assertLinesNotContains(runner.getStdoutLines(), getFileName(1));
 		}
+
+		for (int i = 1; i <= 6; ++i) {
+			File file = getFile(i);
+
+			while (file.exists()) {
+				file.delete();
+			}
+		}
 	}
 
 	public static String getFileName(int index) {
@@ -83,14 +91,6 @@ public class OpenFileStatisticTest extends TestBase {
 		raf3.close();
 		raf4.close();
 		fc.close();
-
-		for (int i = 1; i <= 6; ++i) {
-			File file = getFile(i);
-
-			while (file.exists()) {
-				file.delete();
-			}
-		}
 
 		FileInputStream dummy = null;
 
