@@ -15,6 +15,16 @@ public class OpenFileStatisticTest extends TestBase {
 		new OpenFileStatisticTest().dispatch(args);
 	}
 
+	private static void deleteTestFiles() {
+		for (int i = 1; i <= 6; ++i) {
+			File file = getFile(i);
+
+			while (file.exists()) {
+				file.delete();
+			}
+		}
+	}
+
 	@Override
 	protected void runAllTests() throws Exception {
 		JavaAgentRunner runner = getRunner("traceOpenFiles,logDest=stdout");
@@ -46,13 +56,7 @@ public class OpenFileStatisticTest extends TestBase {
 			assertLinesNotContains(runner.getStdoutLines(), getFileName(1));
 		}
 
-		for (int i = 1; i <= 6; ++i) {
-			File file = getFile(i);
-
-			while (file.exists()) {
-				file.delete();
-			}
-		}
+		deleteTestFiles();
 	}
 
 	public static String getFileName(int index) {
@@ -93,6 +97,7 @@ public class OpenFileStatisticTest extends TestBase {
 		fc.close();
 
 		FileInputStream dummy = null;
+		deleteTestFiles();
 
 		try {
 			dummy = new FileInputStream(getFileName(1));

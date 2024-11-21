@@ -27,6 +27,8 @@ public class JavaAgentRunner {
 
 	private static final String AGENT_NAME = "agent-1.0.1-SNAPSHOT.jar";
 	private static final boolean dumpOutputToFile = Boolean.getBoolean("dumpOutputToFile");
+	private static final boolean useJmcAgentOption = Boolean.getBoolean("useJmcAgentOption");
+	private static final boolean traceExecs = Boolean.getBoolean("traceExecs");
 
 	public JavaAgentRunner(Class<?> classToRun, String options, String ... vmArgs) {
 		this.classToRun = classToRun.getName();
@@ -39,7 +41,13 @@ public class JavaAgentRunner {
 	private ArrayList<String> getArgs(String[] javaArgs) {
 		ArrayList<String> args = new ArrayList<>();
 		args.add(getExe("java"));
-		args.add("-javaagent:" + getAgent() + "=" + options);
+
+		if (useJmcAgentOption) {
+			args.add("-jmcagent:" + options);
+		} else {
+			args.add("-javaagent:" + getAgent() + "=" + options);
+		}
+
 		args.add("-cp");
 		args.add(System.getProperty("java.class.path"));
 
@@ -68,6 +76,16 @@ public class JavaAgentRunner {
 	}
 
 	private static String getAgent() {
+		if (useJmcAgentOption) {
+			String agent = System.getProperty("java.home") + "/lib/agent.jar";
+
+			if (!new File(agent).exists()) {
+				throw new RuntimeException("Could not find " + agent);
+			}
+
+			return agent;
+		}
+
 		File file = new File(AGENT_NAME);
 
 		if (file.exists()) {
@@ -114,6 +132,11 @@ public class JavaAgentRunner {
 		ProcessBuilder pb = new ProcessBuilder(getArgs(javaArgs));
 		commandLine = String.join(" ", pb.command());
 		dumpToAll("------------------------", commandLine);
+
+		if (traceExecs) {
+			System.out.println("Starting " + commandLine);
+		}
+
 		process = pb.start();
 		stdoutWorker = new Thread(new OutputReader(process.getInputStream(), stdout));
 		stdoutWorker.setDaemon(true);
@@ -150,6 +173,11 @@ public class JavaAgentRunner {
 		ProcessBuilder pb = new ProcessBuilder(args);
 		pb.redirectError(Redirect.DISCARD);
 		pb.redirectOutput(Redirect.DISCARD);
+
+		if (traceExecs) {
+			System.out.println("Starting " + String.join(" ", args));
+		}
+
 		Process p = pb.start();
 
 		while (true) {

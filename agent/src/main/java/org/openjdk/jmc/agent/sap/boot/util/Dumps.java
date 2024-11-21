@@ -107,7 +107,7 @@ public class Dumps {
 						e.printStackTrace();
 					}
 				}
-			});
+			}, "Dumper Thread");
 
 			t.setDaemon(true);
 			t.start();
