@@ -41,6 +41,8 @@ public class JavaAgentRunner {
 	private ArrayList<String> getArgs(String[] javaArgs) {
 		ArrayList<String> args = new ArrayList<>();
 		args.add(getExe("java"));
+		args.add("-cp");
+		args.add(System.getProperty("java.class.path"));
 
 		if (useJmcAgentOption) {
 			args.add("-jmcagent:" + options);
