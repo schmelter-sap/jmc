@@ -78,16 +78,6 @@ public class JavaAgentRunner {
 	}
 
 	private static String getAgent() {
-		if (useJmcAgentOption) {
-			String agent = System.getProperty("java.home") + "/lib/agent.jar";
-
-			if (!new File(agent).exists()) {
-				throw new RuntimeException("Could not find " + agent);
-			}
-
-			return agent;
-		}
-
 		File file = new File(AGENT_NAME);
 
 		if (file.exists()) {
@@ -169,8 +159,14 @@ public class JavaAgentRunner {
 		ArrayList<String> args = new ArrayList<>();
 		args.add(getExe("jcmd"));
 		args.add(Long.toString(pid));
-		args.add("JVMTI.agent_load");
-		args.add(getAgent());
+
+		if (useJmcAgentOption) {
+			args.add("JVMTI.jmc_agent_load");
+		} else {
+			args.add("JVMTI.agent_load");
+			args.add(getAgent());
+		}
+
 		args.add(options);
 		ProcessBuilder pb = new ProcessBuilder(args);
 		pb.redirectError(Redirect.DISCARD);
