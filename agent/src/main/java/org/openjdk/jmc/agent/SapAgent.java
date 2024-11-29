@@ -71,11 +71,21 @@ public class SapAgent {
 	private static ArrayList<String> seenCommands = new ArrayList<>();
 
 	public static void premain(String agentArguments, Instrumentation instrumentation) throws Exception {
+		if (!hasBootJar()) {
+			Agent.premain(agentArguments, instrumentation);
+			return;
+		}
+
 		System.out.println("Called Agent with " + agentArguments); //$NON-NLS-1$
 		agentmain(agentArguments, instrumentation);
 	}
 
 	public static void agentmain(String agentArguments, Instrumentation instrumentation) throws Exception {
+		if (!hasBootJar()) {
+			Agent.agentmain(agentArguments, instrumentation);
+			return;
+		}
+
 		ModuleUtils.openUnsafePackage(instrumentation);
 		instr = instrumentation;
 
@@ -131,13 +141,8 @@ public class SapAgent {
 		}
 	}
 
-	private static void ensureBootJarAdded() throws IOException {
-		if (addedBootJar) {
-			return;
-		}
-
+	private static String getBooJar() throws IOException {
 		ClassLoader cl = SapAgent.class.getClassLoader();
-		addedBootJar = true;
 
 		// Find out where the agent jar is, since the boot jar should live
 		// there too.
@@ -145,16 +150,34 @@ public class SapAgent {
 		String file = url.getFile();
 
 		if (!file.startsWith("file:/")) {
-			throw new RuntimeException("Could not determine agent jar from " + file);
+			throw new IOException("Could not determine agent jar from " + file);
 		}
 
 		String jar = file.substring(6, file.indexOf(".jar!")) + "-boot.jar";
 
 		if (!new File(jar).canRead()) {
-			throw new RuntimeException("Could not find boot jar at " + jar);
+			throw new IOException("Could not find boot jar at " + jar);
 		}
 
-		instr.appendToBootstrapClassLoaderSearch(new JarFile(jar));
+		return jar;
+	}
+
+	private static boolean hasBootJar() {
+		try {
+			getBooJar();
+			return true;
+		} catch (Throwable e) {
+			return false;
+		}
+	}
+
+	private static void ensureBootJarAdded() throws IOException {
+		if (addedBootJar) {
+			return;
+		}
+
+		addedBootJar = true;
+		instr.appendToBootstrapClassLoaderSearch(new JarFile(getBooJar()));
 	}
 
 	private static InputStream getStreamForConfig(String config) throws Exception {
