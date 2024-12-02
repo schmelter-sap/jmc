@@ -35,23 +35,35 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-import org.openjdk.jmc.agent.sap.boot.commands.Command;
-import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-import org.openjdk.jmc.agent.sap.boot.commands.OpenFileStatisticCommand;
+import org.openjdk.jmc.agent.sap.boot.util.Command;
+import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
 import org.openjdk.jmc.agent.sap.boot.util.Dumps;
-import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
+import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 
 public class FileOpenCloseLogger {
+	public static final String MUST_CONTAIN = "mustContain";
+	public static final String MUST_NOT_CONTAIN = "mustNotContain";
+	public static final Command dumpCommand;
+	public static final Command command;
 
 	private static HashMap<Key, Entry> mapping = new HashMap<>();
 	private static final ThreadLocal<String> pathKey = new ThreadLocal<String>();
 	private static final ThreadLocal<String> modeKey = new ThreadLocal<String>();
 	private static final String UNKNOWN_FILE = "<unknown file>";
 
-	public static final Command command = OpenFileStatisticCommand.enableCommand;
-
 	static {
-		Dumps.registerDump(OpenFileStatisticCommand.dumpCommand, null, (CommandArguments args) -> printOpenFiles(args));
+		// spotless:off
+		dumpCommand = new Command(
+				"openFiles", "Dump the currently files opened by Java code.",
+				MUST_CONTAIN, "A regexp which must the file name to be printed.",
+				MUST_NOT_CONTAIN, "A regexp which must not match the file name to be printed.");
+		command = new Command(dumpCommand,
+				"traceOpenFiles", "Traces files opened by Java code.");
+		// spotless:on
+
+		LoggingUtils.addOptions(command);
+		Dumps.addOptions(command);
+		Dumps.registerDump(dumpCommand, null, (CommandArguments args) -> printOpenFiles(args));
 		Dumps.registerDump(command, "Open files", (CommandArguments args) -> printOpenFiles(args));
 	}
 
@@ -201,8 +213,8 @@ public class FileOpenCloseLogger {
 			}
 		}
 
-		Pattern mustContain = args.getPattern(OpenFileStatisticCommand.MUST_CONTAIN, null);
-		Pattern mustNotContain = args.getPattern(OpenFileStatisticCommand.MUST_NOT_CONTAIN, null);
+		Pattern mustContain = args.getPattern(MUST_CONTAIN, null);
+		Pattern mustNotContain = args.getPattern(MUST_NOT_CONTAIN, null);
 		int printed = 0;
 
 		for (Entry entry : copy.values()) {
@@ -218,13 +230,13 @@ public class FileOpenCloseLogger {
 				}
 			}
 
-			JdkLogging.log(args, "File '" + entry.path + "', mode '" + entry.mode + "'");
-			JdkLogging.logStack(args, entry.stack, 1);
+			LoggingUtils.log(args, "File '" + entry.path + "', mode '" + entry.mode + "'");
+			LoggingUtils.logStack(args, entry.stack, 1);
 			printed += 1;
 		}
 
 		if (printed > 0) {
-			JdkLogging.log(args, "Printed " + printed + " of " + copy.size() + " file(s) currently opened.");
+			LoggingUtils.log(args, "Printed " + printed + " of " + copy.size() + " file(s) currently opened.");
 		}
 
 		return printed > 0;

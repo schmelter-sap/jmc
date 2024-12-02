@@ -28,9 +28,9 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Properties;
 
-import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-import org.openjdk.jmc.agent.sap.boot.commands.OutputCommand;
-import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
+import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
+import org.openjdk.jmc.agent.sap.boot.util.OutputCommand;
 
 public class SystemPropChangeLogger {
 	private static final Properties systemProps = AccessController.doPrivileged(new PrivilegedAction<Properties>() {
@@ -58,9 +58,10 @@ public class SystemPropChangeLogger {
 			String oldVal = props.getProperty(key);
 
 			if (val == null) {
-				JdkLogging.logWithStack(args, "System properties '" + key + "' with value '" + oldVal + "' removed", 2);
+				LoggingUtils.logWithStack(args, "System properties '" + key + "' with value '" + oldVal + "' removed",
+						2);
 			} else {
-				JdkLogging.logWithStack(args,
+				LoggingUtils.logWithStack(args,
 						"System property '" + key + "' changed from '" + oldVal + "' to '" + val + "'", 2);
 			}
 

@@ -26,10 +26,10 @@ package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.util.TimeZone;
 
-import org.openjdk.jmc.agent.sap.boot.commands.Command;
-import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-import org.openjdk.jmc.agent.sap.boot.commands.OutputCommand;
-import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
+import org.openjdk.jmc.agent.sap.boot.util.Command;
+import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
+import org.openjdk.jmc.agent.sap.boot.util.OutputCommand;
 
 public class TimeZoneChangeLogger {
 
@@ -45,7 +45,7 @@ public class TimeZoneChangeLogger {
 
 		// If this same, don't log it. 
 		if (changesDefaultTimeZone(newZone)) {
-			JdkLogging.logWithStack(new CommandArguments(command),
+			LoggingUtils.logWithStack(new CommandArguments(command),
 					"Changed default time zone to " + result + " (" + newZone.toZoneId().toString() + ").", 2);
 		}
 

@@ -24,23 +24,47 @@
 
 package org.openjdk.jmc.agent.sap.boot.converters;
 
-import org.openjdk.jmc.agent.sap.boot.commands.Command;
-import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-import org.openjdk.jmc.agent.sap.boot.commands.UnsafeMemoryAllocationCommand;
+import org.openjdk.jmc.agent.sap.boot.util.Command;
+import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
 import org.openjdk.jmc.agent.sap.boot.util.Dumps;
-import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
+import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 
 public class UnsafeMemoryAllocationLogger {
+	public static final String MAX_FRAMES = "maxFrames";
+	public static final String MIN_STACK_SIZE = "minStackSize";
+	public static final String MIN_SIZE = "minSize";
+	public static final String MIN_INCREASE = "minIncrease";
+	public static final String MIN_PERCENTAGE = "minPercentage";
+	public static final String MIN_AGE = "minAge";
+	public static final String MAX_AGE = "maxAge";
+	public static final String MUST_CONTAIN = "mustContain";
+	public static final String MUST_NOT_CONTAIN = "mustNotContain";
+	public static final Command dumpCommand;
+	public static final Command command;
 
 	private static final ThreadLocal<Long> sizeKey = new ThreadLocal<Long>();
 	private static final ThreadLocal<Long> ptrKey = new ThreadLocal<Long>();
 	private static final AllocationStatistic allocations = new AllocationStatistic();
 
-	public static final Command command = UnsafeMemoryAllocationCommand.enableCommand;
-
 	static {
-		Dumps.registerDump(UnsafeMemoryAllocationCommand.dumpCommand, null,
-				(CommandArguments args) -> printActiveAllocations(args));
+		// spotless:off
+		dumpCommand = new Command(
+				"unsafeAllocations", "Dump the currently active jdk.internal.misc.Unsafe allocatios.",
+				MAX_FRAMES,	"The maximum number of frame to use for stack traces.",
+				MIN_SIZE, "The minimum size of the live allocations to dump the result.",
+				MIN_STACK_SIZE, "The minimum size of a stack to be included in a dump.",
+				MIN_PERCENTAGE, "The minimum percentage compared to the last dump to print a dump.",
+				MIN_AGE, "The minimum age in minutes to include an allocation in the output.",
+				MAX_AGE, "The maximum age in minutes to include an allocation in the output.",				
+				MUST_CONTAIN, "A regexp which must match at least one frame to be printed.",
+				MUST_NOT_CONTAIN, "A regexp which must not match any frame to be printed.");
+		command = new Command(dumpCommand,
+				"traceUnsafeAllocations", "Traces native memory allocation with jdk.internal.misc.Unsafe");
+		// spotless:on
+
+		LoggingUtils.addOptions(command);
+		Dumps.addOptions(command);
+		Dumps.registerDump(dumpCommand, null, (CommandArguments args) -> printActiveAllocations(args));
 		Dumps.registerDump(command, "Unsafe native memory allocation",
 				(CommandArguments args) -> printActiveAllocations(args));
 	}
@@ -109,7 +133,7 @@ public class UnsafeMemoryAllocationLogger {
 	}
 
 	public static boolean printActiveAllocations(CommandArguments args) {
-		if (JdkLogging.doesOutput(args)) {
+		if (LoggingUtils.doesOutput(args)) {
 			return allocations.copy().printActiveAllocations(args);
 		}
 

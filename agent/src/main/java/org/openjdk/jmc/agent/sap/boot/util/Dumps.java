@@ -28,9 +28,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.function.Predicate;
 
-import org.openjdk.jmc.agent.sap.boot.commands.Command;
-import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-
 public class Dumps {
 	public static final String DUMP_COUNT = "dumpCount";
 	public static final String DUMP_INTERVAL = "dumpInterval";
@@ -114,7 +111,7 @@ public class Dumps {
 						while (dumpsLeft > 0) {
 							if (callback.test(args)) {
 								dumpsLeft -= 1;
-								JdkLogging.log(args,
+								LoggingUtils.log(args,
 										name + " dump " + (dumpCount - dumpsLeft) + " of " + dumpCount + ".");
 							}
 
@@ -124,7 +121,7 @@ public class Dumps {
 						}
 
 						if (exitAfterLastDump) {
-							JdkLogging.log(args, name + " dumps finished. Exiting VM.");
+							LoggingUtils.log(args, name + " dumps finished. Exiting VM.");
 							System.exit(0);
 						}
 					} catch (InterruptedException e) {

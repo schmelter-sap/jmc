@@ -52,9 +52,9 @@ import javax.xml.transform.stream.StreamResult;
 import org.openjdk.jmc.agent.impl.DefaultTransformRegistry;
 import org.openjdk.jmc.agent.jfr.JFRTransformDescriptor;
 import org.openjdk.jmc.agent.jmx.AgentManagementFactory;
-import org.openjdk.jmc.agent.sap.boot.commands.Command;
-import org.openjdk.jmc.agent.sap.boot.commands.Commands;
 import org.openjdk.jmc.agent.sap.boot.converters.GenericLogger;
+import org.openjdk.jmc.agent.sap.boot.util.Command;
+import org.openjdk.jmc.agent.sap.boot.util.Commands;
 import org.openjdk.jmc.agent.sap.boot.util.Dumps;
 import org.openjdk.jmc.agent.util.ModuleUtils;
 import org.w3c.dom.Document;
@@ -291,7 +291,7 @@ public class SapAgent {
 
 		// If we added our boot jar, check the options now.
 		if (addedBootJar) {
-			Class<?> commands = Class.forName("org.openjdk.jmc.agent.sap.boot.commands.Commands", true, null);
+			Class<?> commands = Class.forName("org.openjdk.jmc.agent.sap.boot.util.Commands", true, null);
 			java.lang.reflect.Method checkOptions = commands.getDeclaredMethod("checkCommands");
 
 			if (!(Boolean) checkOptions.invoke(null)) {

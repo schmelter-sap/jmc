@@ -22,7 +22,7 @@
  *
  */
 
-package org.openjdk.jmc.agent.sap.boot.commands;
+package org.openjdk.jmc.agent.sap.boot.util;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;

@@ -26,9 +26,9 @@ package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.util.ArrayList;
 
-import org.openjdk.jmc.agent.sap.boot.commands.Command;
-import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
+import org.openjdk.jmc.agent.sap.boot.util.Command;
+import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 
 public class GenericLogger {
 
@@ -44,7 +44,7 @@ public class GenericLogger {
 		for (int i = 0; i < MAX_FORMATS; ++i) {
 			commands[i] = new Command(GENERIC_COMMAND_PREFIX + (i + 1), "Generic logging format " + (i + 1), FORMAT,
 					"Used to specify the output of the generic logging format " + (i + 1) + ".");
-			JdkLogging.addOptionsWithStack(commands[i]);
+			LoggingUtils.addOptionsWithStack(commands[i]);
 		}
 	}
 
@@ -100,7 +100,7 @@ public class GenericLogger {
 				}
 			}
 
-			JdkLogging.logWithFormat(args, format + "\n", values);
+			LoggingUtils.logWithFormat(args, format + "\n", values);
 		}
 	}
 

@@ -33,10 +33,7 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 
-import org.openjdk.jmc.agent.sap.boot.commands.Command;
-import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-
-public class JdkLogging {
+public class LoggingUtils {
 	public static final String LOG_DEST = "logDest";
 	public static final String LOG_WITH_STACK = "logWithStack";
 	private static HashMap<String, PrintStream> outputs = new HashMap<>();

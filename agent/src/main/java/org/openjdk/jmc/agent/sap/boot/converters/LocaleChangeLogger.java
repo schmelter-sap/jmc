@@ -26,10 +26,10 @@ package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.util.Locale;
 
-import org.openjdk.jmc.agent.sap.boot.commands.Command;
-import org.openjdk.jmc.agent.sap.boot.commands.CommandArguments;
-import org.openjdk.jmc.agent.sap.boot.commands.OutputCommand;
-import org.openjdk.jmc.agent.sap.boot.util.JdkLogging;
+import org.openjdk.jmc.agent.sap.boot.util.Command;
+import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
+import org.openjdk.jmc.agent.sap.boot.util.OutputCommand;
 
 public class LocaleChangeLogger {
 
@@ -62,7 +62,7 @@ public class LocaleChangeLogger {
 		boolean result = !oldLocale.equals(newLocale);
 
 		if (result) {
-			JdkLogging.logWithStack(new CommandArguments(command),
+			LoggingUtils.logWithStack(new CommandArguments(command),
 					"Changed default locale for category '" + categoryKey.get().name() + "' from '"
 							+ oldLocale.getDisplayName(Locale.ENGLISH) + "' to '"
 							+ newLocale.getDisplayName(Locale.ENGLISH) + "'.",
