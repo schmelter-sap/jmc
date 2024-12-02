@@ -76,7 +76,7 @@ public class SapAgent {
 			return;
 		}
 
-		System.out.println("Called Agent with " + agentArguments); //$NON-NLS-1$
+		System.out.println("Called Agent with " + agentArguments);
 		agentmain(agentArguments, instrumentation);
 	}
 
@@ -107,7 +107,7 @@ public class SapAgent {
 			try (InputStream stream = new ByteArrayInputStream(getXmlConfig(agentArguments))) {
 				initializeAgent(stream, instrumentation);
 			} catch (XMLStreamException | IOException | XMLValidationException e) {
-				logger.log(Level.SEVERE, "Failed to read jfr probe definitions from " + agentArguments, e); //$NON-NLS-1$
+				logger.log(Level.SEVERE, "Failed to read jfr probe definitions from " + agentArguments, e);
 			}
 		}
 	}
@@ -228,13 +228,13 @@ public class SapAgent {
 
 		// We merge into a dummy which is guaranteed to contain all the stuff we expect.
 		// Thanks to spotless for forcing this to look like shit.
-		String DUMMY = "<jfragent>\n" + "    <config>\n" + "        <classprefix>__JFREvent</classprefix>\n" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				+ "        <allowtostring>false</allowtostring>\n" + "        <allowconverter>false</allowconverter>\n" //$NON-NLS-1$ //$NON-NLS-2$
-				+ "    </config>\n" + "    <events>\n" + "    </events>\n" + "</jfragent>\n"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		String DUMMY = "<jfragent>\n" + "    <config>\n" + "        <classprefix>__JFREvent</classprefix>\n"
+				+ "        <allowtostring>false</allowtostring>\n" + "        <allowconverter>false</allowconverter>\n"
+				+ "    </config>\n" + "    <events>\n" + "    </events>\n" + "</jfragent>\n";
 
 		Document base = factory.newDocumentBuilder()
 				.parse(new ByteArrayInputStream(DUMMY.getBytes(StandardCharsets.UTF_8)));
-		Node events = base.getElementsByTagName("events").item(0); //$NON-NLS-1$
+		Node events = base.getElementsByTagName("events").item(0);
 		String requestedPrefix = null;
 		String configName = null;
 
@@ -259,24 +259,24 @@ public class SapAgent {
 					configName = part;
 				}
 
-				if (getBool(doc, "allowtostring", false)) { //$NON-NLS-1$
-					setText(base, "allowtostring", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+				if (getBool(doc, "allowtostring", false)) {
+					setText(base, "allowtostring", "true");
 				}
 
-				if (getBool(doc, "allowconverter", false)) { //$NON-NLS-1$
-					setText(base, "allowconverter", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+				if (getBool(doc, "allowconverter", false)) {
+					setText(base, "allowconverter", "true");
 				}
 
-				String prefix = getString(doc, "classprefix"); //$NON-NLS-1$
+				String prefix = getString(doc, "classprefix");
 
 				if (requestedPrefix == null) {
 					requestedPrefix = prefix;
-					setText(base, "classprefix", prefix); //$NON-NLS-1$
+					setText(base, "classprefix", prefix);
 				} else if ((prefix != null) && !requestedPrefix.equals(prefix)) {
-					System.out.println("Conflicting class prefixes " + prefix + " vs. " + requestedPrefix); //$NON-NLS-1$ //$NON-NLS-2$
+					System.out.println("Conflicting class prefixes " + prefix + " vs. " + requestedPrefix);
 				}
 
-				NodeList list = doc.getElementsByTagName("event"); //$NON-NLS-1$
+				NodeList list = doc.getElementsByTagName("event");
 
 				for (int j = 0; j < list.getLength(); ++j) {
 					Node toAdd = list.item(j).cloneNode(true);
@@ -346,14 +346,14 @@ public class SapAgent {
 		for (Class<?> clazz : instrumentation.getAllLoadedClasses()) {
 			if (clazzes.contains(clazz.getName())) {
 				classesToRetransform.add(clazz);
-				System.out.println("Class to retransform: " + clazz); //$NON-NLS-1$
+				System.out.println("Class to retransform: " + clazz);
 			}
 		}
 
 		try {
 			instrumentation.retransformClasses(classesToRetransform.toArray(new Class<?>[0]));
 		} catch (UnmodifiableClassException e) {
-			logger.log(Level.SEVERE, "Unable to retransform classes", e); //$NON-NLS-1$
+			logger.log(Level.SEVERE, "Unable to retransform classes", e);
 		}
 	}
 }
