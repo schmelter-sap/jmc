@@ -71,21 +71,10 @@ public class SapAgent {
 	private static ArrayList<String> seenCommands = new ArrayList<>();
 
 	public static void premain(String agentArguments, Instrumentation instrumentation) throws Exception {
-		if (!hasBootJar()) {
-			Agent.premain(agentArguments, instrumentation);
-			return;
-		}
-
-		System.out.println("Called Agent with " + agentArguments);
 		agentmain(agentArguments, instrumentation);
 	}
 
 	public static void agentmain(String agentArguments, Instrumentation instrumentation) throws Exception {
-		if (!hasBootJar()) {
-			Agent.agentmain(agentArguments, instrumentation);
-			return;
-		}
-
 		ModuleUtils.openUnsafePackage(instrumentation);
 		instr = instrumentation;
 
@@ -141,7 +130,11 @@ public class SapAgent {
 		}
 	}
 
-	private static String getBooJar() throws IOException {
+	private static void ensureBootJarAdded() throws IOException {
+		if (addedBootJar) {
+			return;
+		}
+
 		ClassLoader cl = SapAgent.class.getClassLoader();
 
 		// Find out where the agent jar is, since the boot jar should live
@@ -159,25 +152,8 @@ public class SapAgent {
 			throw new IOException("Could not find boot jar at " + jar);
 		}
 
-		return jar;
-	}
-
-	private static boolean hasBootJar() {
-		try {
-			getBooJar();
-			return true;
-		} catch (Throwable e) {
-			return false;
-		}
-	}
-
-	private static void ensureBootJarAdded() throws IOException {
-		if (addedBootJar) {
-			return;
-		}
-
+		instr.appendToBootstrapClassLoaderSearch(new JarFile(jar));
 		addedBootJar = true;
-		instr.appendToBootstrapClassLoaderSearch(new JarFile(getBooJar()));
 	}
 
 	private static InputStream getStreamForConfig(String config) throws Exception {
