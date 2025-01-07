@@ -301,6 +301,7 @@ public class JavaAgentRunner {
 		}
 
 		if (dumpOutputToFile) {
+			waitForOutput();
 			dumpToFile(getStdoutLines(), false);
 			dumpToFile(getStderrLines(), true);
 			dumpToAll("------------------------", getCommandLine() + " end with result " + result);

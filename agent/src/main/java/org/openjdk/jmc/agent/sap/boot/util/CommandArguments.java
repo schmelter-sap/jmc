@@ -33,14 +33,17 @@ public class CommandArguments {
 	private final HashMap<String, String> args;
 	private final Command command;
 
-	public CommandArguments(Command command) {
-		this.command = command;
-		String optionsLine = AccessController.doPrivileged(new PrivilegedAction<String>() {
+	public static String getOptionsLine(Command command) {
+		return AccessController.doPrivileged(new PrivilegedAction<String>() {
 			public String run() {
 				return System.getProperty("com.sap.jvm.jmcagent.options." + command.getName(), "");
 			}
 		});
-		this.args = getOptions(optionsLine);
+	}
+
+	public CommandArguments(Command command) {
+		this.command = command;
+		this.args = getOptions(getOptionsLine(command));
 	}
 
 	public CommandArguments(String optionsLine) {
@@ -55,6 +58,10 @@ public class CommandArguments {
 
 	public Command getCommand() {
 		return command;
+	}
+
+	public boolean hasOption(String option) {
+		return args.containsKey(option);
 	}
 
 	public boolean hasHelpOption() {
@@ -112,6 +119,18 @@ public class CommandArguments {
 		if (args.containsKey(option)) {
 			try {
 				return Long.parseLong(args.get(option));
+			} catch (NumberFormatException e) {
+				reportOptionError(option, "Could not parse integer value");
+			}
+		}
+
+		return defaultRersult;
+	}
+
+	public double getDouble(String option, double defaultRersult) {
+		if (args.containsKey(option)) {
+			try {
+				return Double.parseDouble(args.get(option));
 			} catch (NumberFormatException e) {
 				reportOptionError(option, "Could not parse integer value");
 			}
