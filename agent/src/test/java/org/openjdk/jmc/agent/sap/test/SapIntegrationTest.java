@@ -24,16 +24,33 @@
 
 package org.openjdk.jmc.agent.sap.test;
 
+import java.util.ArrayList;
+
 import org.junit.Test;
 
 public class SapIntegrationTest {
 
 	@Test
 	public void smokeTest() throws Exception {
-		if (System.getProperty("fullTest", "false").equals("true")) {
-			TestRunner.main(new String[0]);
-		} else {
-			TestRunner.main(new String[] {"-smoke"});
+		ArrayList<String> args = new ArrayList<>();
+
+		if (!System.getProperty("fullTest", "false").equals("false")) {
+			args.add("-smoke");
 		}
+
+		String port = System.getProperty("debugPort", "");
+
+		if (port.length() > 0) {
+			args.add("-debug");
+			args.add(port);
+		}
+
+		String singleTest = System.getProperty("singleTest", "");
+
+		if (singleTest.length() > 0) {
+			args.add(singleTest);
+		}
+
+		TestRunner.main(args.toArray(new String[args.size()]));
 	}
 }

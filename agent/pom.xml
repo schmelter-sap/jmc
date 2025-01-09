@@ -278,6 +278,8 @@
 							<systemPropertyVariables>
 								<fullTest>${fullTest}</fullTest>
 								<dumpOutputToFile>${dumpOutputToFile}</dumpOutputToFile>
+								<debugPort>${debugPort}</debugPort>
+								<singleTest>${singleTest}</singleTest>
 							</systemPropertyVariables>
 							<argLine>
 							   -cp target/test-classes/
