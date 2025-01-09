@@ -71,7 +71,19 @@ public class Command {
 	}
 
 	public boolean hasOption(String name) {
-		return optionsWithHelp.containsKey(name);
+		if (optionsWithHelp.containsKey(name)) {
+			return true;
+		}
+
+		for (String option : optionsWithHelp.keySet()) {
+			if (option.contains("<idx>")) {
+				if (name.matches(option.replace("<idx>", "[0-9]+"))) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	public String getOptionHJelp(String name) {
