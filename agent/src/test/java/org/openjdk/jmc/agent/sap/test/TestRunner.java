@@ -27,6 +27,7 @@ package org.openjdk.jmc.agent.sap.test;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 
 public class TestRunner {
 	private static Class<?>[] testClasses = new Class[] {UnsafeAllocationTest.class, SysPropsChangeTest.class,
@@ -57,6 +58,8 @@ public class TestRunner {
 			}
 		}
 
+		HashSet<String> toRun = new HashSet<>(leftArgs);
+
 		for (Class<?> testClass : testClasses) {
 			boolean run = false;
 
@@ -66,6 +69,7 @@ public class TestRunner {
 				for (String arg : leftArgs) {
 					if (testClass.getName().endsWith("." + arg)) {
 						run = true;
+						toRun.remove(arg);
 					}
 				}
 			}
@@ -74,6 +78,10 @@ public class TestRunner {
 				Method mainMethod = testClass.getDeclaredMethod("main", String[].class);
 				mainMethod.invoke(null, new Object[] {new String[0]});
 			}
+		}
+
+		if (toRun.size() > 0) {
+			throw new RuntimeException("Could not find test " + toRun.iterator().next());
 		}
 	}
 }
