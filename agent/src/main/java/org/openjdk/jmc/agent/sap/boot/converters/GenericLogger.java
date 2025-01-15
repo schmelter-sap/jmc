@@ -25,6 +25,8 @@
 package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -38,6 +40,7 @@ public class GenericLogger {
 	public static final int MAX_FORMATS = 5;
 	public static final Command[] commands = new Command[MAX_FORMATS];
 
+	private static final String ONCE_PER_STACK = "oncePerStack";
 	private static final String FORMAT = "format";
 	private static final String MAX_LONG = "maxLongValue";
 	private static final String MIN_LONG = "minLongValue";
@@ -52,11 +55,13 @@ public class GenericLogger {
 	private static final ArrayList<ArrayList<ThreadLocal<Object>>> locals = new ArrayList<>();
 	private static final int[] parameterIndices = new int[MAX_FORMATS];
 	private static final String[] formats = new String[MAX_FORMATS];
+	private static final HashSet<SeenStack> seenStacks = new HashSet<>();
 
 	static {
 		for (int i = 0; i < MAX_FORMATS; ++i) {
 			commands[i] = new Command(GENERIC_COMMAND_PREFIX + (i + 1), "Generic logging format " + (i + 1), FORMAT,
-					"Used to specify the output of the generic logging format " + (i + 1) + ".");
+					"Used to specify the output of the generic logging format " + (i + 1) + ".", ONCE_PER_STACK,
+					"If true we only log once per unique call stack.");
 			LoggingUtils.addOptionsWithStack(commands[i]);
 			addFilterOptions(commands[i]);
 		}
@@ -87,6 +92,18 @@ public class GenericLogger {
 
 		if (isLast) {
 			CommandArguments args = new CommandArguments(commands[index]);
+
+			if (args.getBoolean(ONCE_PER_STACK, false)) {
+				SeenStack stack = new SeenStack();
+
+				synchronized (GenericLogger.class) {
+					if (seenStacks.contains(stack)) {
+						return;
+					}
+
+					seenStacks.add(stack);
+				}
+			}
 
 			String format;
 			Object[] values = new Object[paramenterIndex + 1];
@@ -717,6 +734,15 @@ public class GenericLogger {
 		@Override
 		public boolean test(Object t) {
 			if (t instanceof Number) {
+				// Handle double and float separately, since we want to avoid treating 0.3 <= 0.
+				if (t instanceof Double) {
+					return ((Double) t).doubleValue() <= max;
+				}
+
+				if (t instanceof Float) {
+					return ((Float) t).floatValue() <= max;
+				}
+
 				return ((Number) t).longValue() <= max;
 			}
 
@@ -752,6 +778,15 @@ public class GenericLogger {
 
 		@Override
 		public boolean test(Object t) {
+			// Handle double and float separately, since we want to avoid treating -0.3 >= 0.
+			if (t instanceof Double) {
+				return ((Double) t).doubleValue() >= min;
+			}
+
+			if (t instanceof Float) {
+				return ((Float) t).floatValue() >= min;
+			}
+
 			if (t instanceof Number) {
 				return ((Number) t).longValue() >= min;
 			}
@@ -936,6 +971,36 @@ public class GenericLogger {
 		public boolean test(Object t) {
 			if (t instanceof Class) {
 				return instanceofImpl((Class<?>) t);
+			}
+
+			return false;
+		}
+	}
+
+	private static class SeenStack {
+		private final int hashCode;
+		private final StackTraceElement[] stack;
+
+		public SeenStack() {
+			stack = new Throwable().fillInStackTrace().getStackTrace();
+			hashCode = Arrays.hashCode(stack);
+		}
+
+		@Override
+		public int hashCode() {
+			return hashCode;
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof SeenStack) {
+				SeenStack otherStack = (SeenStack) other;
+
+				if (otherStack.hashCode != hashCode) {
+					return false;
+				}
+
+				return Arrays.equals(stack, otherStack.stack);
 			}
 
 			return false;
