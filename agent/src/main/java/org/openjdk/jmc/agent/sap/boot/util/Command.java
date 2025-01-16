@@ -101,11 +101,16 @@ public class Command {
 		Arrays.sort(options, String.CASE_INSENSITIVE_ORDER);
 
 		if (options.length > 0) {
+			str.println();
 			str.println("The following options are supported:");
 
 			for (String option : options) {
 				str.println(option + ": " + getOptionHJelp(option));
 			}
+
+			str.println();
+			str.println("In order to specify options, add them separated by commas after the command:");
+			str.println(getName() + "[,<option1=value>[,<option2=value[,...]]]");
 		}
 	}
 

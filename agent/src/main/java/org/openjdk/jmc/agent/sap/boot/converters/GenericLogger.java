@@ -59,7 +59,8 @@ public class GenericLogger {
 
 	static {
 		for (int i = 0; i < MAX_FORMATS; ++i) {
-			commands[i] = new Command(GENERIC_COMMAND_PREFIX + (i + 1), "Generic logging format " + (i + 1), FORMAT,
+			commands[i] = new Command(GENERIC_COMMAND_PREFIX + (i + 1),
+					"Used to specify the logging options for generic logger " + (i + 1), FORMAT,
 					"Used to specify the output of the generic logging format " + (i + 1) + ".", ONCE_PER_STACK,
 					"If true we only log once per unique call stack.");
 			LoggingUtils.addOptionsWithStack(commands[i]);

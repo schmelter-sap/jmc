@@ -59,7 +59,7 @@ public class UnsafeMemoryAllocationLogger {
 				MUST_CONTAIN, "A regexp which must match at least one frame to be printed.",
 				MUST_NOT_CONTAIN, "A regexp which must not match any frame to be printed.");
 		command = new Command(dumpCommand,
-				"traceUnsafeAllocations", "Traces native memory allocation with jdk.internal.misc.Unsafe");
+				"traceUnsafeAllocations", "Traces native memory allocation by jdk.internal.misc.Unsafe");
 		// spotless:on
 
 		LoggingUtils.addOptions(command);

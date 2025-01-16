@@ -34,7 +34,7 @@ import org.openjdk.jmc.agent.sap.boot.util.OutputCommand;
 public class TimeZoneChangeLogger {
 
 	public static Command command = new OutputCommand("traceTimeZoneChange",
-			"Logs when the default time zone is changed.") {
+			"Traces when the default time zone is changed.") {
 		public void preTraceInit() {
 			TimeZone.getDefault(); // Trigger loading before we trace to avoid circularity errors.
 		}

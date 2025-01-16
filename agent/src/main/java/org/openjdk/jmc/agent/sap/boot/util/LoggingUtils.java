@@ -41,9 +41,9 @@ public class LoggingUtils {
 
 	public static void addOptions(Command command) {
 		command.addOption(LOG_DEST,
-				"Specified where the output shows up. Can be 'stdout', 'stderr', 'none' or a file name. "
+				"Specifies where the output shows up. Can be 'stdout', 'stderr', 'none' or a file name. "
 						+ "Prepend the filename with a '+' to append to the file intead of overwriting it.");
-		command.addOption(LOG_WITH_STACK, "Print a stack trace for every log output.");
+		command.addOption(LOG_WITH_STACK, "If true, print a stack trace for every log output.");
 	}
 
 	public static void addOptionsWithStack(Command command) {

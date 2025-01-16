@@ -35,7 +35,8 @@ public class LocaleChangeLogger {
 
 	private static final ThreadLocal<Locale.Category> categoryKey = new ThreadLocal<Locale.Category>();
 
-	public static Command command = new OutputCommand("traceLocaleChange", "Logs when the default locale is changed.");
+	public static Command command = new OutputCommand("traceLocaleChange",
+			"Traces when the default locale is changed.");
 
 	public static String logDefaultLocaleCategoryChange(Locale.Category newCategory) {
 		assert categoryKey.get() == null;
