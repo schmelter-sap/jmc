@@ -46,7 +46,7 @@ public class SystemPropChangeLogger {
 	private static final ThreadLocal<String> usedValue = new ThreadLocal<String>();
 
 	public static boolean logProperties(Properties props) {
-		CommandArguments args = new CommandArguments(command);
+		CommandArguments args = CommandArguments.get(command);
 		String key = usedKey.get();
 		assert key == null;
 		String val = usedValue.get();

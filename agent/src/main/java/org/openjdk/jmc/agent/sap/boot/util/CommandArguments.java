@@ -27,21 +27,24 @@ package org.openjdk.jmc.agent.sap.boot.util;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.regex.Pattern;
 
 public class CommandArguments {
+	private static final IdentityHashMap<String, CachedArguments> cachedArgs = new IdentityHashMap<>();
+
 	private final HashMap<String, String> args;
 	private final Command command;
 
 	public static String getOptionsLine(Command command) {
 		return AccessController.doPrivileged(new PrivilegedAction<String>() {
 			public String run() {
-				return System.getProperty("com.sap.jvm.jmcagent.options." + command.getName(), "");
+				return System.getProperty(command.getPropertyName(), "");
 			}
 		});
 	}
 
-	public CommandArguments(Command command) {
+	private CommandArguments(Command command) {
 		this.command = command;
 		this.args = getOptions(getOptionsLine(command));
 	}
@@ -58,6 +61,29 @@ public class CommandArguments {
 
 	public Command getCommand() {
 		return command;
+	}
+
+	public static CommandArguments get(Command command) {
+		CachedArguments result = null;
+
+		synchronized (CommandArguments.class) {
+			result = cachedArgs.get(command.getName());
+		}
+
+		if ((result != null) && (result.optionsLine != getOptionsLine(command))) {
+			// Options have changed.
+			result = null;
+		}
+
+		if (result == null) {
+			result = new CachedArguments(getOptionsLine(command), new CommandArguments(command));
+
+			synchronized (CommandArguments.class) {
+				cachedArgs.put(command.getName(), result);
+			}
+		}
+
+		return result.args;
 	}
 
 	public boolean hasOption(String option) {
@@ -245,5 +271,15 @@ public class CommandArguments {
 				+ command.getName() + "'");
 		System.err.println(msg);
 		System.exit(1);
+	}
+
+	private static class CachedArguments {
+		public final String optionsLine;
+		public final CommandArguments args;
+
+		public CachedArguments(String optionsLine, CommandArguments args) {
+			this.optionsLine = optionsLine;
+			this.args = args;
+		}
 	}
 }

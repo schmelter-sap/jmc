@@ -91,7 +91,7 @@ public class Dumps {
 			registeredDumps.put(command, callback);
 		}
 
-		CommandArguments args = new CommandArguments(command);
+		CommandArguments args = CommandArguments.get(command);
 		long dumpCount = args.getLong(DUMP_COUNT, 0);
 
 		if (dumpCount != 0) {

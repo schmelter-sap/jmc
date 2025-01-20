@@ -63,7 +63,7 @@ public class LocaleChangeLogger {
 		boolean result = !oldLocale.equals(newLocale);
 
 		if (result) {
-			LoggingUtils.logWithStack(new CommandArguments(command),
+			LoggingUtils.logWithStack(CommandArguments.get(command),
 					"Changed default locale for category '" + categoryKey.get().name() + "' from '"
 							+ oldLocale.getDisplayName(Locale.ENGLISH) + "' to '"
 							+ newLocale.getDisplayName(Locale.ENGLISH) + "'.",

@@ -92,7 +92,7 @@ public class GenericLogger {
 		params.get(paramenterIndex).set(value);
 
 		if (isLast) {
-			CommandArguments args = new CommandArguments(commands[index]);
+			CommandArguments args = CommandArguments.get(commands[index]);
 
 			if (args.getBoolean(ONCE_PER_STACK, false)) {
 				SeenStack stack = new SeenStack();

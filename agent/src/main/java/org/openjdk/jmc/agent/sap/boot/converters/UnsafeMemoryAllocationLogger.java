@@ -129,7 +129,7 @@ public class UnsafeMemoryAllocationLogger {
 	}
 
 	public static boolean printActiveAllocations() {
-		return printActiveAllocations(new CommandArguments(command));
+		return printActiveAllocations(CommandArguments.get(command));
 	}
 
 	public static boolean printActiveAllocations(CommandArguments args) {

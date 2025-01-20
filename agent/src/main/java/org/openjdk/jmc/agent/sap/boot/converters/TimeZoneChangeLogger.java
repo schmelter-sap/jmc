@@ -45,7 +45,7 @@ public class TimeZoneChangeLogger {
 
 		// If this same, don't log it.
 		if (changesDefaultTimeZone(newZone)) {
-			LoggingUtils.logWithStack(new CommandArguments(command),
+			LoggingUtils.logWithStack(CommandArguments.get(command),
 					"Changed default time zone to " + result + " (" + newZone.toZoneId().toString() + ").", 2);
 		}
 

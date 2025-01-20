@@ -31,11 +31,13 @@ import java.util.Objects;
 
 public class Command {
 	private final String name;
+	private final String propertyName;
 	private final String description;
 	private final HashMap<String, String> optionsWithHelp;
 
 	public Command(String name, String description, String ... optionsWithHelp) {
 		this.name = name;
+		this.propertyName = "com.sap.jvm.jmcagent.options." + name;
 		this.description = description;
 		this.optionsWithHelp = new HashMap<>();
 
@@ -46,6 +48,7 @@ public class Command {
 
 	public Command(Command parentCommand, String name, String description, String ... optionsWithHelp) {
 		this.name = name;
+		this.propertyName = "com.sap.jvm.jmcagent.options." + name;
 		this.description = description;
 		this.optionsWithHelp = new HashMap<>(parentCommand.optionsWithHelp);
 
@@ -60,6 +63,10 @@ public class Command {
 
 	public String getName() {
 		return name;
+	}
+
+	public String getPropertyName() {
+		return propertyName;
 	}
 
 	public String getDescription() {
