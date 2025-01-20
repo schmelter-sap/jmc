@@ -34,7 +34,7 @@ public class SapIntegrationTest {
 	public void smokeTest() throws Exception {
 		ArrayList<String> args = new ArrayList<>();
 
-		if (!System.getProperty("fullTest", "false").equals("false")) {
+		if (!System.getProperty("fullTest", "false").equals("true")) {
 			args.add("-smoke");
 		}
 
