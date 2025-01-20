@@ -132,8 +132,21 @@ public class GenericLogger {
 				}
 			}
 
+			@SuppressWarnings("unchecked")
+			ArrayList<Predicate<Object>> filters = (ArrayList<Predicate<Object>>) args.getCustomData();
+
+			if (filters == null) {
+				filters = new ArrayList<>(values.length);
+
+				for (int i = 0; i < values.length; ++i) {
+					filters.add(getFilter(args, i + 1));
+				}
+
+				args.setCustomData(filters);
+			}
+
 			for (int i = 0; i < values.length; ++i) {
-				Predicate<Object> filter = getFilter(args, i + 1);
+				Predicate<Object> filter = filters.get(i);
 
 				if ((filter != null) && !filter.test(values[i])) {
 					return;

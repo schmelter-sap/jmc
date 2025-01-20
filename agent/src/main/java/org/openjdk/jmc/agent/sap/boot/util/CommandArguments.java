@@ -35,6 +35,7 @@ public class CommandArguments {
 
 	private final HashMap<String, String> args;
 	private final Command command;
+	private volatile Object customData;
 
 	public static String getOptionsLine(Command command) {
 		return AccessController.doPrivileged(new PrivilegedAction<String>() {
@@ -84,6 +85,14 @@ public class CommandArguments {
 		}
 
 		return result.args;
+	}
+
+	public Object getCustomData() {
+		return customData;
+	}
+
+	public void setCustomData(Object customData) {
+		this.customData = customData;
 	}
 
 	public boolean hasOption(String option) {
