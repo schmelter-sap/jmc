@@ -26,7 +26,7 @@ package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.util.regex.Pattern;
 
-import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.Arguments;
 
 public class AllocationStatisticDumpFilter {
 	public final int maxFrames;
@@ -39,7 +39,7 @@ public class AllocationStatisticDumpFilter {
 	public final Pattern mustContain;
 	public final Pattern mustNotContain;
 
-	public AllocationStatisticDumpFilter(CommandArguments args) {
+	public AllocationStatisticDumpFilter(Arguments args) {
 		this.maxFrames = args.getInt(UnsafeMemoryAllocationLogger.MAX_FRAMES, 16);
 		this.minSize = args.getSize(UnsafeMemoryAllocationLogger.MIN_SIZE, 0);
 		this.minStackSize = args.getSize(UnsafeMemoryAllocationLogger.MIN_STACK_SIZE, 0);

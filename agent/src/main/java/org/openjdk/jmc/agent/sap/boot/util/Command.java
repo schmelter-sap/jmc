@@ -31,13 +31,12 @@ import java.util.Objects;
 
 public class Command {
 	private final String name;
-	private final String propertyName;
 	private final String description;
 	private final HashMap<String, String> optionsWithHelp;
+	public static final HashMap<String, ArgumentsHolder> holders = new HashMap<>();
 
 	public Command(String name, String description, String ... optionsWithHelp) {
 		this.name = name;
-		this.propertyName = "com.sap.jvm.jmcagent.options." + name;
 		this.description = description;
 		this.optionsWithHelp = new HashMap<>();
 
@@ -48,7 +47,6 @@ public class Command {
 
 	public Command(Command parentCommand, String name, String description, String ... optionsWithHelp) {
 		this.name = name;
-		this.propertyName = "com.sap.jvm.jmcagent.options." + name;
 		this.description = description;
 		this.optionsWithHelp = new HashMap<>(parentCommand.optionsWithHelp);
 
@@ -63,10 +61,6 @@ public class Command {
 
 	public String getName() {
 		return name;
-	}
-
-	public String getPropertyName() {
-		return propertyName;
 	}
 
 	public String getDescription() {
@@ -93,12 +87,50 @@ public class Command {
 		return false;
 	}
 
-	public String getOptionHJelp(String name) {
+	public String getOptionHelp(String name) {
 		return optionsWithHelp.get(name);
 	}
 
 	public void preTraceInit() {
-		// Nothing to do by default.
+		// Nothing to do by default
+	}
+
+	public void addCommandArgs(String options) {
+		Arguments args = new Arguments(options, this);
+		boolean seenFirst = false;
+
+		synchronized (Command.class) {
+			ArgumentsHolder holder = holders.get(name);
+
+			if (holder == null) {
+				holder = new ArgumentsHolder(args);
+				holders.put(name, holder);
+				seenFirst = true;
+			} else {
+				if (holder.get() == null) {
+					seenFirst = true;
+				}
+
+				holder.set(args);
+			}
+		}
+
+		if (seenFirst) {
+			preTraceInit();
+		}
+	}
+
+	public ArgumentsHolder getArguments() {
+		synchronized (Command.class) {
+			ArgumentsHolder holder = holders.get(name);
+
+			if (holder == null) {
+				holder = new ArgumentsHolder(null);
+				holders.put(name, holder);
+			}
+
+			return holder;
+		}
 	}
 
 	public void printHelp(PrintStream str) {
@@ -112,7 +144,7 @@ public class Command {
 			str.println("The following options are supported:");
 
 			for (String option : options) {
-				str.println(option + ": " + getOptionHJelp(option));
+				str.println(option + ": " + getOptionHelp(option));
 			}
 
 			str.println();

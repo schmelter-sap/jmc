@@ -51,11 +51,11 @@ public class LoggingUtils {
 		command.addOption(LOG_WITH_STACK, "Print a stack trace for every log output.");
 	}
 
-	public static boolean doesOutput(CommandArguments args) {
+	public static boolean doesOutput(Arguments args) {
 		return !"none".equals(args.getString(LOG_DEST, "stderr"));
 	}
 
-	public static Formatter getFormatter(CommandArguments args) {
+	public static Formatter getFormatter(Arguments args) {
 		PrintStream stream = getStream(args);
 		Formatter formatter;
 
@@ -71,7 +71,7 @@ public class LoggingUtils {
 		return formatter;
 	}
 
-	public static PrintStream getStream(CommandArguments args) {
+	public static PrintStream getStream(Arguments args) {
 		String dest = args.getString(LOG_DEST, "stderr");
 
 		if ("none".equals(dest)) {
@@ -127,7 +127,7 @@ public class LoggingUtils {
 		}
 	}
 
-	public static void log(CommandArguments args, String msg) {
+	public static void log(Arguments args, String msg) {
 		getStream(args).println(msg);
 
 		if (args.getBoolean(LOG_WITH_STACK, false)) {
@@ -135,7 +135,7 @@ public class LoggingUtils {
 		}
 	}
 
-	public static void logWithFormat(CommandArguments args, String format, Object[] values) {
+	public static void logWithFormat(Arguments args, String format, Object[] values) {
 		Formatter formatter = getFormatter(args);
 		formatter.format(format + "\n", values);
 
@@ -144,16 +144,16 @@ public class LoggingUtils {
 		}
 	}
 
-	private static void logCurrentStack(CommandArguments args, int toSkip) {
+	private static void logCurrentStack(Arguments args, int toSkip) {
 		logStack(args, new Exception(), toSkip);
 	}
 
-	public static void logWithStack(CommandArguments args, String msg, int toSkip) {
+	public static void logWithStack(Arguments args, String msg, int toSkip) {
 		getStream(args).println(msg);
 		logStack(args, new Exception(), toSkip);
 	}
 
-	public static void logStack(CommandArguments args, Exception stack, int toSkip) {
+	public static void logStack(Arguments args, Exception stack, int toSkip) {
 		PrintStream stream = getStream(args);
 		StackTraceElement[] frames = stack.getStackTrace();
 

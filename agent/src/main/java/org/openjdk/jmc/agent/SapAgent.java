@@ -36,6 +36,7 @@ import java.lang.instrument.UnmodifiableClassException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -68,7 +69,7 @@ public class SapAgent {
 	private static Logger logger = Logger.getLogger(SapAgent.class.getName());
 	private static Instrumentation instr;
 	private static boolean addedBootJar = false;
-	private static ArrayList<String> seenCommands = new ArrayList<>();
+	private static HashMap<String, String> seenCommands = new HashMap<>();
 
 	public static void premain(String agentArguments, Instrumentation instrumentation) throws Exception {
 		agentmain(agentArguments, instrumentation);
@@ -176,22 +177,18 @@ public class SapAgent {
 			ensureBootJarAdded();
 		}
 
-		for (String commandName : seenCommands) {
+		for (String commandName : seenCommands.keySet()) {
 			Command command = Commands.getCommand(commandName);
 
 			if (command != null) {
-				command.preTraceInit();
+				command.addCommandArgs(seenCommands.get(commandName));
 			}
 		}
 	}
 
 	private static StringBuilder addCommandOptions(String commandName, StringBuilder options) {
 		if (commandName != null) {
-			if (options.length() > 0) {
-				System.setProperty("com.sap.jvm.jmcagent.options." + commandName, options.toString());
-			}
-
-			seenCommands.add(commandName);
+			seenCommands.put(commandName, options.toString());
 		}
 
 		return new StringBuilder();
@@ -266,19 +263,15 @@ public class SapAgent {
 		preInitCommands();
 
 		// If we added our boot jar, check the options now.
-		if (addedBootJar) {
-			Class<?> commands = Class.forName("org.openjdk.jmc.agent.sap.boot.util.Commands", true, null);
-			java.lang.reflect.Method checkOptions = commands.getDeclaredMethod("checkCommands");
-
-			if (!(Boolean) checkOptions.invoke(null)) {
-				System.exit(1);
-			}
+		if (addedBootJar && !Commands.checkCommands()) {
+			System.exit(1);
 		}
 
 		TransformerFactory tf = TransformerFactory.newInstance();
 		javax.xml.transform.Transformer trans = tf.newTransformer();
 		StringWriter sw = new StringWriter();
 		trans.transform(new DOMSource(base), new StreamResult(sw));
+
 		return sw.toString().getBytes();
 	}
 

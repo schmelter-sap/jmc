@@ -24,9 +24,6 @@
 
 package org.openjdk.jmc.agent.sap.boot.util;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-
 import org.openjdk.jmc.agent.sap.boot.converters.GenericLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.LocaleChangeLogger;
 import org.openjdk.jmc.agent.sap.boot.converters.SystemPropChangeLogger;
@@ -62,17 +59,13 @@ public class Commands {
 
 	public static boolean checkCommands() {
 		for (Command command : commands) {
-			String optionsLine = AccessController.doPrivileged(new PrivilegedAction<String>() {
-				public String run() {
-					return System.getProperty("com.sap.jvm.jmcagent.options." + command.getName(), null);
-				}
-			});
+			ArgumentsHolder holder = command.getArguments();
 
-			if (optionsLine == null) {
-				continue;
+			if (holder.get() == null) {
+				continue; // No arguments.
 			}
 
-			CommandArguments args = new CommandArguments(optionsLine, command);
+			Arguments args = holder.get();
 
 			if (args.hasHelpOption()) {
 				printHelp(command);

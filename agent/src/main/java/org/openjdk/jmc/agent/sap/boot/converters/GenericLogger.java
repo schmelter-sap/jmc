@@ -30,8 +30,9 @@ import java.util.HashSet;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import org.openjdk.jmc.agent.sap.boot.util.ArgumentsHolder;
 import org.openjdk.jmc.agent.sap.boot.util.Command;
-import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.Arguments;
 import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 
 public class GenericLogger {
@@ -56,6 +57,7 @@ public class GenericLogger {
 	private static final int[] parameterIndices = new int[MAX_FORMATS];
 	private static final String[] formats = new String[MAX_FORMATS];
 	private static final HashSet<SeenStack> seenStacks = new HashSet<>();
+	private static final ArgumentsHolder[] argsHolder = new ArgumentsHolder[MAX_FORMATS];
 
 	static {
 		for (int i = 0; i < MAX_FORMATS; ++i) {
@@ -65,6 +67,7 @@ public class GenericLogger {
 					"If true we only log once per unique call stack.");
 			LoggingUtils.addOptionsWithStack(commands[i]);
 			addFilterOptions(commands[i]);
+			argsHolder[i] = commands[i].getArguments();
 		}
 	}
 
@@ -92,7 +95,7 @@ public class GenericLogger {
 		params.get(paramenterIndex).set(value);
 
 		if (isLast) {
-			CommandArguments args = CommandArguments.get(commands[index]);
+			Arguments args = argsHolder[index].get();
 
 			if (args.getBoolean(ONCE_PER_STACK, false)) {
 				SeenStack stack = new SeenStack();
@@ -681,7 +684,7 @@ public class GenericLogger {
 		}
 	}
 
-	private static Predicate<Object> getFilter(CommandArguments args, int idx) {
+	private static Predicate<Object> getFilter(Arguments args, int idx) {
 		Predicate<Object> result = null;
 		String maxLong = getValueOption(MAX_LONG, idx);
 		String maxDouble = getValueOption(MAX_DOUBLE, idx);

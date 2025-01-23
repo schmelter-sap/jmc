@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.regex.Pattern;
 
 import org.openjdk.jmc.agent.sap.boot.util.Command;
-import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.Arguments;
 import org.openjdk.jmc.agent.sap.boot.util.Dumps;
 import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 
@@ -58,13 +58,16 @@ public class FileOpenCloseLogger {
 				MUST_CONTAIN, "A regexp which must the file name to be printed.",
 				MUST_NOT_CONTAIN, "A regexp which must not match the file name to be printed.");
 		command = new Command(dumpCommand,
-				"traceOpenFiles", "Traces files opened by Java code.");
+				"traceOpenFiles", "Traces files opened by Java code.") {
+			public void preTraceInit() {
+				Dumps.registerPeriodicDump(command, "Open files", (Arguments args) -> printOpenFiles(args));
+			}
+		};
 		// spotless:on
 
 		LoggingUtils.addOptions(command);
 		Dumps.addOptions(command);
-		Dumps.registerDump(dumpCommand, null, (CommandArguments args) -> printOpenFiles(args));
-		Dumps.registerDump(command, "Open files", (CommandArguments args) -> printOpenFiles(args));
+		Dumps.registerOnDemandDump(dumpCommand, (Arguments args) -> printOpenFiles(args));
 	}
 
 	public static synchronized boolean openFileInputStream(FileInputStream stream) {
@@ -171,7 +174,7 @@ public class FileOpenCloseLogger {
 		return UNKNOWN_FILE;
 	}
 
-	public static boolean printOpenFiles(CommandArguments args) {
+	public static boolean printOpenFiles(Arguments args) {
 		HashMap<Key, Entry> copy;
 
 		// Make a copy first, since logging might open new files.

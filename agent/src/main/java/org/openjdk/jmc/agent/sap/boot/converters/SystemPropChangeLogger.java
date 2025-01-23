@@ -28,7 +28,8 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Properties;
 
-import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.ArgumentsHolder;
+import org.openjdk.jmc.agent.sap.boot.util.Arguments;
 import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 import org.openjdk.jmc.agent.sap.boot.util.OutputCommand;
 
@@ -42,11 +43,13 @@ public class SystemPropChangeLogger {
 	public static final OutputCommand command = new OutputCommand("traceSysPropsChange",
 			"Traces changes to the system properties.");
 
+	private static final ArgumentsHolder holder = command.getArguments();
+
 	private static final ThreadLocal<String> usedKey = new ThreadLocal<String>();
 	private static final ThreadLocal<String> usedValue = new ThreadLocal<String>();
 
 	public static boolean logProperties(Properties props) {
-		CommandArguments args = CommandArguments.get(command);
+		Arguments args = holder.get();
 		String key = usedKey.get();
 		assert key == null;
 		String val = usedValue.get();

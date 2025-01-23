@@ -24,8 +24,9 @@
 
 package org.openjdk.jmc.agent.sap.boot.converters;
 
+import org.openjdk.jmc.agent.sap.boot.util.ArgumentsHolder;
 import org.openjdk.jmc.agent.sap.boot.util.Command;
-import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.Arguments;
 import org.openjdk.jmc.agent.sap.boot.util.Dumps;
 import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 
@@ -45,6 +46,7 @@ public class UnsafeMemoryAllocationLogger {
 	private static final ThreadLocal<Long> sizeKey = new ThreadLocal<Long>();
 	private static final ThreadLocal<Long> ptrKey = new ThreadLocal<Long>();
 	private static final AllocationStatistic allocations = new AllocationStatistic();
+	private static final ArgumentsHolder holder;
 
 	static {
 		// spotless:off
@@ -59,14 +61,18 @@ public class UnsafeMemoryAllocationLogger {
 				MUST_CONTAIN, "A regexp which must match at least one frame to be printed.",
 				MUST_NOT_CONTAIN, "A regexp which must not match any frame to be printed.");
 		command = new Command(dumpCommand,
-				"traceUnsafeAllocations", "Traces native memory allocation by jdk.internal.misc.Unsafe");
+				"traceUnsafeAllocations", "Traces native memory allocation by jdk.internal.misc.Unsafe") {
+			public void preTraceInit() {
+				Dumps.registerPeriodicDump(command, "Unsafe native memory allocation",
+						(Arguments args) -> printActiveAllocations(args));
+			}
+		};
 		// spotless:on
 
 		LoggingUtils.addOptions(command);
 		Dumps.addOptions(command);
-		Dumps.registerDump(dumpCommand, null, (CommandArguments args) -> printActiveAllocations(args));
-		Dumps.registerDump(command, "Unsafe native memory allocation",
-				(CommandArguments args) -> printActiveAllocations(args));
+		Dumps.registerOnDemandDump(dumpCommand, (Arguments args) -> printActiveAllocations(args));
+		holder = command.getArguments();
 	}
 
 	public static long logSize(long size) {
@@ -129,10 +135,10 @@ public class UnsafeMemoryAllocationLogger {
 	}
 
 	public static boolean printActiveAllocations() {
-		return printActiveAllocations(CommandArguments.get(command));
+		return printActiveAllocations(holder.get());
 	}
 
-	public static boolean printActiveAllocations(CommandArguments args) {
+	public static boolean printActiveAllocations(Arguments args) {
 		if (LoggingUtils.doesOutput(args)) {
 			return allocations.copy().printActiveAllocations(args);
 		}

@@ -28,7 +28,7 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
+import org.openjdk.jmc.agent.sap.boot.util.Arguments;
 import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 
 public class AllocationStatistic {
@@ -69,7 +69,7 @@ public class AllocationStatistic {
 		}
 	}
 
-	public boolean printActiveAllocations(CommandArguments args) {
+	public boolean printActiveAllocations(Arguments args) {
 		PrintStream ps = LoggingUtils.getStream(args);
 		AllocationStatisticDumpFilter filter = new AllocationStatisticDumpFilter(args);
 

@@ -34,7 +34,7 @@ public class Dumps {
 	public static final String DUMP_DELAY = "dumpDelay";
 	public static final String EXIT_AFTER_LAST_DUMP = "exitAfterLastDump";
 
-	private static final HashMap<Command, Predicate<CommandArguments>> registeredDumps = new HashMap<>();
+	private static final HashMap<Command, Predicate<Arguments>> registeredDumps = new HashMap<>();
 
 	public static void performDump(String arguments) throws IOException {
 		if (arguments.equals("help")) {
@@ -71,8 +71,8 @@ public class Dumps {
 			arguments = "";
 		}
 
-		CommandArguments args = new CommandArguments(arguments);
-		Predicate<CommandArguments> callback = null;
+		Arguments args = new Arguments(arguments);
+		Predicate<Arguments> callback = null;
 
 		synchronized (Dumps.class) {
 			callback = registeredDumps.get(new Command(type, ""));
@@ -86,12 +86,8 @@ public class Dumps {
 		callback.test(args);
 	}
 
-	public static void registerDump(Command command, String name, Predicate<CommandArguments> callback) {
-		synchronized (Dumps.class) {
-			registeredDumps.put(command, callback);
-		}
-
-		CommandArguments args = CommandArguments.get(command);
+	public static void registerPeriodicDump(Command command, String name, Predicate<Arguments> callback) {
+		Arguments args = command.getArguments().get();
 		long dumpCount = args.getLong(DUMP_COUNT, 0);
 
 		if (dumpCount != 0) {
@@ -132,6 +128,12 @@ public class Dumps {
 
 			t.setDaemon(true);
 			t.start();
+		}
+	}
+
+	public static void registerOnDemandDump(Command command, Predicate<Arguments> callback) {
+		synchronized (Dumps.class) {
+			registeredDumps.put(command, callback);
 		}
 	}
 

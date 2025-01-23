@@ -26,8 +26,8 @@ package org.openjdk.jmc.agent.sap.boot.converters;
 
 import java.util.TimeZone;
 
+import org.openjdk.jmc.agent.sap.boot.util.ArgumentsHolder;
 import org.openjdk.jmc.agent.sap.boot.util.Command;
-import org.openjdk.jmc.agent.sap.boot.util.CommandArguments;
 import org.openjdk.jmc.agent.sap.boot.util.LoggingUtils;
 import org.openjdk.jmc.agent.sap.boot.util.OutputCommand;
 
@@ -40,12 +40,14 @@ public class TimeZoneChangeLogger {
 		}
 	};
 
+	private static final ArgumentsHolder holder = command.getArguments();
+
 	public static String logDefaultTimeZoneChange(TimeZone newZone) {
 		String result = newZone.getDisplayName();
 
 		// If this same, don't log it.
 		if (changesDefaultTimeZone(newZone)) {
-			LoggingUtils.logWithStack(CommandArguments.get(command),
+			LoggingUtils.logWithStack(holder.get(),
 					"Changed default time zone to " + result + " (" + newZone.toZoneId().toString() + ").", 2);
 		}
 
