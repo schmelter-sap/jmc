@@ -85,22 +85,21 @@ public class UnsafeAllocationTest extends TestBase {
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,mustNotContain=reallocateMemory");
 		runner.kill();
 		assertLinesNotContainsRegExp(runner.getStderrLines(), "Allocated 570 bytes at");
-		assertLinesContainsRegExp(runner.getStderrLines(), "Allocated 750 bytes at");
-		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 1 of 2 allocations with 750 bytes");
+		assertLinesContainsRegExp(runner.getStderrLines(), "Allocated 750 bytes at",
+				"Printed 1 of 2 allocations with 750 bytes");
 		runner.start(DO_NATIVE_ALLOCS);
 		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,minStackSize=571");
 		runner.kill();
 		assertLinesNotContainsRegExp(runner.getStderrLines(), "Allocated 570 bytes at");
-		assertLinesContainsRegExp(runner.getStderrLines(), "Allocated 750 bytes at");
-		assertLinesContainsRegExp(runner.getStderrLines(), "Printed 1 of 2 allocations with 750 bytes");
+		assertLinesContainsRegExp(runner.getStderrLines(), "Allocated 750 bytes at",
+				"Printed 1 of 2 allocations with 750 bytes");
 		runner.start(DO_NATIVE_ALLOCS);
 		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,minAge=1");
 		runner.kill();
-		assertLinesNotContainsRegExp(runner.getStderrLines(), "Allocated 570 bytes at");
-		assertLinesNotContainsRegExp(runner.getStderrLines(), "Allocated 750 bytes at");
-		assertLinesNotContainsRegExp(runner.getStderrLines(), "Printed");
+		assertLinesNotContainsRegExp(runner.getStderrLines(), "Allocated 570 bytes at", "Allocated 750 bytes at",
+				"Printed");
 	}
 
 	public void testRandomAllocs() throws IOException {
@@ -110,8 +109,8 @@ public class UnsafeAllocationTest extends TestBase {
 		runner.waitForDone();
 		runner.loadAgent("dump=unsafeAllocations,logDest=stderr,maxFrames=8");
 		runner.kill();
-		assertLinesContainsRegExp(runner.getStdoutLines(), "^Printed [0-9]+ of [0-9] allocations with [0-9]+ bytes");
-		assertLinesContainsRegExp(runner.getStderrLines(), "^Printed [0-9]+ of [0-9] allocations with [0-9]+ bytes");
+		assertLinesContainsRegExp(runner.getStdoutLines(), "^Printed [0-9]+ of [0-9] allocations with [0-9]+ bytes",
+				"^Printed [0-9]+ of [0-9] allocations with [0-9]+ bytes");
 	}
 
 	public static void doNativeAllocs() {
@@ -159,10 +158,9 @@ public class UnsafeAllocationTest extends TestBase {
 		runner.start(DO_DELAYED_ALLOCS);
 		runner.waitForDone();
 		runner.kill();
-		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 1 of 1 allocations with 1048576 bytes");
-		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 2 of 2 allocations with 8388608 bytes");
-		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 3 of 3 allocations with 17825792 bytes");
-		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 4 of 4 allocations with 38797312 bytes");
+		assertLinesContainsRegExp(runner.getStdoutLines(), "Printed 1 of 1 allocations with 1048576 bytes",
+				"Printed 2 of 2 allocations with 8388608 bytes", "Printed 3 of 3 allocations with 17825792 bytes",
+				"Printed 4 of 4 allocations with 38797312 bytes");
 	}
 
 	public void testAgeFiltering() throws IOException {

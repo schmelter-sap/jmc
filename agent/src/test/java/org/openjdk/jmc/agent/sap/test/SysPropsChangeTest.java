@@ -41,10 +41,8 @@ public class SysPropsChangeTest extends TestBase {
 		runner.start("changeSystemProps");
 		runner.waitForEnd();
 		assertLinesContainsRegExp(runner.getStdoutLines(),
-				"System property 'TEST_KEY' changed from 'null' to 'TEST_VAL'");
-		assertLinesContainsRegExp(runner.getStdoutLines(),
-				"System properties 'TEST_KEY' with value 'TEST_VAL' removed");
-		assertLinesContainsRegExp(runner.getStdoutLines(), SysPropsChangeTest.class.getName());
+				"System property 'TEST_KEY' changed from 'null' to 'TEST_VAL'",
+				"System properties 'TEST_KEY' with value 'TEST_VAL' removed", SysPropsChangeTest.class.getName());
 		assertLinesNotContainsRegExp(runner.getStdoutLines(), "TEST_KEY_NO_SYS");
 	}
 

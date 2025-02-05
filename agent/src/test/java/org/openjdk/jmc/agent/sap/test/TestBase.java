@@ -92,43 +92,51 @@ public abstract class TestBase {
 		throw new AssertionError(msg);
 	}
 
-	public static void assertLinesContains(String[] lines, String substring) {
-		for (String line : lines) {
-			if (line.indexOf(substring) >= 0) {
-				return;
+	public static void assertLinesContains(String[] lines, String ... substrings) {
+		outer: for (String substring : substrings) {
+			for (String line : lines) {
+				if (line.indexOf(substring) >= 0) {
+					continue outer;
+				}
 			}
-		}
 
-		failLines(lines, "Could not find '" + substring + "' in the lines");
-	}
-
-	public static void assertLinesContainsRegExp(String[] lines, String regexp) {
-		Pattern pattern = Pattern.compile(regexp);
-
-		for (String line : lines) {
-			if (pattern.matcher(line).find()) {
-				return;
-			}
-		}
-
-		failLines(lines, "Could not find regexp '" + regexp + "' in the lines");
-	}
-
-	public static void assertLinesNotContains(String[] lines, String substring) {
-		for (String line : lines) {
-			if (line.indexOf(substring) >= 0) {
-				failLines(lines, "Unexpectedly found '" + substring + "' in the lines");
-			}
+			failLines(lines, "Could not find '" + substring + "' in the lines");
 		}
 	}
 
-	public static void assertLinesNotContainsRegExp(String[] lines, String regexp) {
-		Pattern pattern = Pattern.compile(regexp);
+	public static void assertLinesContainsRegExp(String[] lines, String ... regexps) {
+		outer: for (String regexp : regexps) {
+			Pattern pattern = Pattern.compile(regexp);
 
-		for (int i = 0; i < lines.length; ++i) {
-			if (pattern.matcher(lines[i]).find()) {
-				failLines(lines, "Unexpectedly found regexp '" + regexp + "' in the lines", i);
-				return;
+			for (String line : lines) {
+				if (pattern.matcher(line).find()) {
+					continue outer;
+				}
+			}
+
+			failLines(lines, "Could not find regexp '" + regexp + "' in the lines");
+		}
+	}
+
+	public static void assertLinesNotContains(String[] lines, String ... substrings) {
+		for (String substring : substrings) {
+			for (String line : lines) {
+				if (line.indexOf(substring) >= 0) {
+					failLines(lines, "Unexpectedly found '" + substring + "' in the lines");
+				}
+			}
+		}
+	}
+
+	public static void assertLinesNotContainsRegExp(String[] lines, String ... regexps) {
+		for (String regexp : regexps) {
+			Pattern pattern = Pattern.compile(regexp);
+
+			for (int i = 0; i < lines.length; ++i) {
+				if (pattern.matcher(lines[i]).find()) {
+					failLines(lines, "Unexpectedly found regexp '" + regexp + "' in the lines", i);
+					return;
+				}
 			}
 		}
 	}

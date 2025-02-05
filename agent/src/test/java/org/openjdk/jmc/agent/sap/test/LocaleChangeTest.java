@@ -39,33 +39,22 @@ public class LocaleChangeTest extends TestBase {
 		runner.start("changeLocale");
 		runner.waitForEnd();
 		assertLinesContainsRegExp(runner.getStdoutLines(),
-				"Changed default locale for category 'DISPLAY' from .+ to 'English [(]Canada[)]'");
-		assertLinesContainsRegExp(runner.getStdoutLines(),
+				"Changed default locale for category 'DISPLAY' from .+ to 'English [(]Canada[)]'",
 				"Changed default locale for category 'FORMAT' from .* to 'English [(]Canada[)]'");
 		assertLinesContains(runner.getStdoutLines(),
-				"Changed default locale for category 'DISPLAY' from 'English (Canada)' to 'Chinese (Taiwan)'.");
-		assertLinesContains(runner.getStdoutLines(),
-				"Changed default locale for category 'FORMAT' from 'English (Canada)' to 'Chinese (Taiwan)'.");
-		assertLinesNotContains(runner.getStdoutLines(),
-				"Changed default locale for category 'DISPLAY' from 'Chinese (Taiwan)' to 'Chinese (Taiwan)'.");
-		assertLinesNotContains(runner.getStdoutLines(),
-				"Changed default locale for category 'FORMAT' from 'Chinese (Taiwan)' to 'Chinese (Taiwan)'.");
-		assertLinesContains(runner.getStdoutLines(),
-				"Changed default locale for category 'DISPLAY' from 'Chinese (Taiwan)' to 'English (Canada)'");
-		assertLinesContains(runner.getStdoutLines(),
-				"Changed default locale for category 'FORMAT' from 'Chinese (Taiwan)' to 'English (Canada)'.");
-		assertLinesContains(runner.getStdoutLines(),
-				"Changed default locale for category 'DISPLAY' from 'English (Canada)' to 'Chinese (China)'.");
-		assertLinesNotContains(runner.getStdoutLines(),
-				"Changed default locale for category 'DISPLAY' from 'Chinese (China)' to 'Chinese (China)'.");
-		assertLinesContains(runner.getStdoutLines(),
-				"Changed default locale for category 'DISPLAY' from 'Chinese (China)' to 'French (France)'.");
-		assertLinesContains(runner.getStdoutLines(),
-				"Changed default locale for category 'FORMAT' from 'English (Canada)' to 'Italian'.");
-		assertLinesNotContains(runner.getStdoutLines(),
-				"Changed default locale for category 'FORMAT' from 'Italian' to 'Italian'.");
-		assertLinesContains(runner.getStdoutLines(),
+				"Changed default locale for category 'DISPLAY' from 'English (Canada)' to 'Chinese (Taiwan)'.",
+				"Changed default locale for category 'FORMAT' from 'English (Canada)' to 'Chinese (Taiwan)'.",
+				"Changed default locale for category 'DISPLAY' from 'Chinese (Taiwan)' to 'English (Canada)'",
+				"Changed default locale for category 'FORMAT' from 'Chinese (Taiwan)' to 'English (Canada)'.",
+				"Changed default locale for category 'DISPLAY' from 'English (Canada)' to 'Chinese (China)'.",
+				"Changed default locale for category 'DISPLAY' from 'Chinese (China)' to 'French (France)'.",
+				"Changed default locale for category 'FORMAT' from 'English (Canada)' to 'Italian'.",
 				"Changed default locale for category 'FORMAT' from 'Italian' to 'French (Canada)'.");
+		assertLinesNotContains(runner.getStdoutLines(),
+				"Changed default locale for category 'DISPLAY' from 'Chinese (Taiwan)' to 'Chinese (Taiwan)'.",
+				"Changed default locale for category 'FORMAT' from 'Chinese (Taiwan)' to 'Chinese (Taiwan)'.",
+				"Changed default locale for category 'DISPLAY' from 'Chinese (China)' to 'Chinese (China)'.",
+				"Changed default locale for category 'FORMAT' from 'Italian' to 'Italian'.");
 	}
 
 	public static void changeLocale() {
