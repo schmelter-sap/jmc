@@ -27,7 +27,10 @@ package org.openjdk.jmc.agent.sap.test;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.regex.Pattern;
 
 public abstract class TestBase {
@@ -87,6 +90,14 @@ public abstract class TestBase {
 		jfrFileIndex += 1;
 
 		return jfrFile;
+	}
+
+	public String createXmlFile(String xml) throws IOException {
+		InputStream is = TestBase.class.getClassLoader().getResourceAsStream("org/openjdk/jmc/agent/test/sap/" + xml);
+		File output = new File(new File("target", "output"), xml);
+		Files.copy(is, output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+		return output.toString();
 	}
 
 	public JavaAgentRunner getRunnerWithJFR(String options, String ... vmArgs) {

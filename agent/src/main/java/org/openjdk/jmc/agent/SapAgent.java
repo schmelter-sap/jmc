@@ -39,6 +39,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -61,6 +62,7 @@ import org.openjdk.jmc.agent.sap.boot.util.Commands;
 import org.openjdk.jmc.agent.sap.boot.util.Dumps;
 import org.openjdk.jmc.agent.util.ModuleUtils;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -200,6 +202,31 @@ public class SapAgent {
 		return new StringBuilder();
 	}
 
+	private static ByteArrayInputStream convertSimpleFormat(Document doc) throws IOException {
+		StringBuilder result = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+		result.append("<jfragent><events>");
+		NodeList events = doc.getElementsByTagName("event");
+		boolean useConverter = false;
+		boolean useToString = false;
+		ArrayList<SimpleEventSpec> specs = new ArrayList<>();
+
+		for (int i = 0; i < events.getLength(); ++i) {
+			try {
+				specs.add(new SimpleEventSpec(events.item(i)));
+				System.out.println(specs.get(specs.size() - 1).toXml());
+			} catch (IOException e) {
+				throw new IOException("Error in event nr " + (i + 1), e);
+			}
+		}
+
+		result.append("<config><allowtostring>" + useToString + "</allowtostring>");
+		result.append("<allowconverter>" + useConverter + "</allowconverter></config>");
+
+		result.append("</events></jfragent>");
+
+		return new ByteArrayInputStream(result.toString().getBytes(StandardCharsets.UTF_8));
+	}
+
 	private static byte[] getXmlConfig(String agentArguments) throws Exception {
 		String[] parts = agentArguments.split("(?<!\\\\),");
 		StringBuilder configProp = new StringBuilder();
@@ -237,6 +264,10 @@ public class SapAgent {
 				InputStream is = getStreamForConfig(part);
 				Document doc = factory.newDocumentBuilder().parse(is);
 				configProp = addCommandOptions(configName, configProp);
+
+				if (getString(doc, "sapagent") != null) {
+					doc = factory.newDocumentBuilder().parse(convertSimpleFormat(doc));
+				}
 
 				if (is instanceof FileInputStream) {
 					// No configuration for direct XML file.
@@ -337,5 +368,266 @@ public class SapAgent {
 		} catch (UnmodifiableClassException e) {
 			logger.log(Level.SEVERE, "Unable to retransform classes", e);
 		}
+	}
+}
+
+final class SimpleParameterSpec {
+	public final int index;
+	public final String name;
+	public final String description;
+	public final String converter;
+
+	public SimpleParameterSpec(Node node) {
+		index = 0;
+		name = null;
+		description = null;
+		converter = null;
+	}
+}
+
+final class SimpleReturnValueSpec {
+	public final String name;
+	public final String description;
+	public final String converter;
+
+	public SimpleReturnValueSpec(Node node) {
+		name = null;
+		description = null;
+		converter = null;
+	}
+}
+
+final class SimpleFieldSpec {
+	public final String expression;
+	public final String name;
+	public final String description;
+	public final String converter;
+
+	public SimpleFieldSpec(Node node) {
+		expression = null;
+		name = null;
+		description = null;
+		converter = null;
+	}
+}
+
+final class SimpleEventSpec {
+	public final String className;
+	public final String methodName;
+	public final String signature;
+	public final String id;
+	public final String label;
+	public final String path;
+	public final String description;
+	public final boolean stacktrace;
+	public final ArrayList<SimpleParameterSpec> parameters = new ArrayList<>();
+	public final ArrayList<SimpleReturnValueSpec> returnValues = new ArrayList<>();
+	public final ArrayList<SimpleFieldSpec> fields = new ArrayList<>();
+
+	public static HashSet<String> createdIds = new HashSet<>();
+
+	public String toXml() {
+		StringBuilder result = new StringBuilder();
+		result.append("className: " + className + "\n");
+		result.append("methodName: " + methodName + "\n");
+		result.append("signature: " + signature + "\n");
+		result.append("id: " + id + "\n");
+		result.append("label: " + label + "\n");
+		result.append("path: " + path + "\n");
+		result.append("description: " + description + "\n");
+		result.append("stacktrace: " + stacktrace + "\n");
+
+		return result.toString();
+	}
+
+	public SimpleEventSpec(Node node) throws IOException {
+		NodeList children = node.getChildNodes();
+		Node methodNode = null;
+		String explicitDescription = null;
+
+		for (int i = 0; i < children.getLength(); ++i) {
+			Node child = children.item(i);
+			String name = child.getNodeName();
+
+			if ("method".equals(name)) {
+				if (methodNode != null) {
+					throw new IOException("More than one <method> element in <event>.");
+				}
+
+				methodNode = child;
+			} else if ("description".equals(name)) {
+				explicitDescription = child.getNodeValue();
+			}
+		}
+
+		if (methodNode == null) {
+			throw new IOException("Missing <method> element in <event>.");
+		}
+
+		NamedNodeMap attrs = methodNode.getAttributes();
+		Node rawMethod = null;
+		Node rawReturnType = null;
+
+		if (attrs != null) {
+			rawMethod = attrs.getNamedItem("method");
+			rawReturnType = attrs.getNamedItem("returntype");
+		}
+
+		if (rawMethod == null) {
+			throw new IOException("Missing 'method' attribute in <method>.");
+		}
+
+		if (rawReturnType == null) {
+			throw new IOException("Missing 'returntype' attribute in <method>.");
+		}
+
+		int sigStart = rawMethod.getNodeValue().indexOf('(');
+		int sigEnd = rawMethod.getNodeValue().indexOf('(');
+
+		if (sigStart < 0) {
+			throw new IOException("Missing '(' in method specification.");
+		}
+
+		if (sigStart == 0) {
+			throw new IOException("Method specification starts with '('.");
+		}
+
+		if (sigEnd < 0) {
+			throw new IOException("Missing ')' in method specification.");
+		}
+
+		if (sigStart > sigEnd) {
+			throw new IOException("Found ')' before '(' in method specification.");
+		}
+
+		String[] parts = rawMethod.getNodeValue().split("[()]");
+		signature = "(" + convertSignature(parts[1]) + ")" + convertSignature(rawReturnType.getNodeValue());
+		String classAndMethod = parts[0];
+
+		int lastDot = classAndMethod.lastIndexOf('.');
+
+		if (lastDot < 0) {
+			throw new IOException("Missing class name in method specification.");
+		}
+
+		className = addJavaLangIfNeeded(classAndMethod.substring(0, lastDot));
+		methodName = classAndMethod.substring(lastDot + 1);
+
+		Node rawId = attrs.getNamedItem("id");
+
+		if (rawId == null) {
+			id = createId(className, methodName);
+		} else {
+			id = rawId.getNodeValue();
+		}
+
+		Node rawLabel = attrs.getNamedItem("label");
+		String fullMethodName = className + "." + methodName + "(" + parts[1] + ")";
+
+		if (rawLabel == null) {
+			label = fullMethodName;
+		} else {
+			label = rawLabel.getNodeValue();
+		}
+
+		Node rawPath = attrs.getNamedItem("path");
+
+		if (rawPath == null) {
+			path = "jfragent/uncategorized";
+		} else {
+			path = rawPath.getNodeValue();
+		}
+
+		if (explicitDescription == null) {
+			description = "Tracing of " + fullMethodName + ".";
+		} else {
+			description = explicitDescription;
+		}
+
+		Node rawStacktrace = attrs.getNamedItem("stacktrace");
+
+		if (rawStacktrace == null) {
+			stacktrace = true;
+		} else {
+			stacktrace = "true".equals(rawStacktrace.getNodeValue());
+		}
+	}
+
+	private static String createId(String className, String methodName) {
+		String initialId = className + "." + methodName;
+		String id = initialId;
+		int index = 0;
+
+		while (createdIds.contains(id)) {
+			id = initialId + "#" + index;
+			index++;
+		}
+
+		createdIds.add(id);
+
+		return id;
+	}
+
+	private static String addJavaLangIfNeeded(String name) {
+		if (name.indexOf('.') >= 0) {
+			return name;
+		}
+
+		try {
+			Class.forName("java.lang." + name, false, null);
+		} catch (ClassNotFoundException e) {
+			return name;
+		}
+
+		return "java.lang." + name;
+	}
+
+	private static String convertSignature(String raw) throws IOException {
+		StringBuilder result = new StringBuilder();
+
+		for (String part : raw.split("[ ,]+")) {
+			while (part.endsWith("[]")) {
+				result.append("[");
+				part = part.substring(0, part.length() - 2);
+			}
+
+			if (part.isEmpty()) {
+				throw new IOException("Missing type name in '" + raw + "'");
+			}
+
+			switch (part) {
+			case "boolean":
+				result.append("Z");
+				continue;
+			case "byte":
+				result.append("B");
+				continue;
+			case "short":
+				result.append("S");
+				continue;
+			case "char":
+				result.append("C");
+				continue;
+			case "int":
+				result.append("I");
+				continue;
+			case "long":
+				result.append("J");
+				continue;
+			case "float":
+				result.append("F");
+				continue;
+			case "double":
+				result.append("D");
+				continue;
+			case "void":
+				result.append("V");
+				continue;
+			}
+
+			result.append("L" + addJavaLangIfNeeded(part).replace('.', '/') + ";");
+		}
+
+		return result.toString();
 	}
 }

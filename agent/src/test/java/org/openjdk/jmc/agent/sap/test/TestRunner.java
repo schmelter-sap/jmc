@@ -31,7 +31,8 @@ import java.util.HashSet;
 
 public class TestRunner {
 	private static Class<?>[] testClasses = new Class[] {UnsafeAllocationTest.class, SysPropsChangeTest.class,
-			TimeZoneChangeTest.class, LocaleChangeTest.class, OpenFileStatisticTest.class, GenericLoggingTest.class};
+			TimeZoneChangeTest.class, LocaleChangeTest.class, OpenFileStatisticTest.class, GenericLoggingTest.class,
+			SimpleFormatTest.class};
 
 	public static void main(String[] args, String[] additionalVmArgs) throws Exception {
 		JavaAgentRunner.setAdditionalVmArgs(additionalVmArgs);
